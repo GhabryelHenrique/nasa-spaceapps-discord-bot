@@ -1,0 +1,25 @@
+# Core dependencies
+aiohappyeyeballs==2.6.1
+aiohttp==3.12.15
+aiosignal==1.4.0
+attrs==25.3.0
+discord.py==2.5.2
+frozenlist==1.7.0
+idna==3.10
+multidict==6.6.3
+propcache==0.3.2
+typing_extensions==4.14.1
+yarl==1.20.1
+
+# Database
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Development and Testing (optional)
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+aiosqlite>=0.19.0

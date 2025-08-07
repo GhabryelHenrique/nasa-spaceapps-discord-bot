@@ -5,6 +5,7 @@ import config
 from database.db import create_tables, DatabaseManager
 from views.register_view import RegistrationView
 from handlers.registration_form import RegistrationHandler
+from utils.logger import get_logger, set_bot_instance
 
 # Configurações do bot
 intents = discord.Intents.default()
@@ -20,40 +21,54 @@ class NASASpaceAppsBot(commands.Bot):
             description="Bot para inscrições no NASA Space Apps Challenge - Uberlândia"
         )
         self.registration_handler = None
+        self.logger = get_logger()
 
     async def setup_hook(self):
         """Configurações iniciais do bot"""
-        # Criar tabelas do banco de dados
-        create_tables()
-        
-        # Inicializar handlers
-        self.registration_handler = RegistrationHandler(self)
-        from handlers.email_verification_handler import EmailVerificationHandler
-        from handlers.application_handler import ApplicationHandler
-        self.email_verification_handler = EmailVerificationHandler(self)
-        self.application_handler = ApplicationHandler(self)
-        
-        # Adicionar views persistentes
-        self.add_view(RegistrationView())
-        from views.team_search_view import TeamSearchView
-        self.add_view(TeamSearchView())
-        
-        # Adicionar views de convites (serão recriadas dinamicamente quando necessário)
-        # As views de convite são temporárias e não precisam ser persistentes
-        
-        print(f'Bot {self.user} está online!')
+        try:
+            # Configurar sistema de logging
+            set_bot_instance(self)
+            self.logger.info("Iniciando configuração do bot...")
+            
+            # Criar tabelas do banco de dados
+            create_tables()
+            self.logger.info("Tabelas do banco de dados verificadas/criadas")
+            
+            # Inicializar handlers
+            self.registration_handler = RegistrationHandler(self)
+            from handlers.email_verification_handler import EmailVerificationHandler
+            from handlers.application_handler import ApplicationHandler
+            self.email_verification_handler = EmailVerificationHandler(self)
+            self.application_handler = ApplicationHandler(self)
+            self.logger.info("Handlers inicializados")
+            
+            # Adicionar views persistentes
+            self.add_view(RegistrationView())
+            from views.team_search_view import TeamSearchView
+            self.add_view(TeamSearchView())
+            self.logger.info("Views persistentes adicionadas")
+            
+            # Adicionar views de convites (serão recriadas dinamicamente quando necessário)
+            # As views de convite são temporárias e não precisam ser persistentes
+            
+            self.logger.info(f'Bot configurado e pronto!')
+            
+        except Exception as e:
+            self.logger.error("Erro crítico durante inicialização do bot", exc_info=e)
 
     async def on_ready(self):
         """Evento executado quando o bot fica online"""
-        print(f'Conectado como {self.user.name} (ID: {self.user.id})')
-        print('------')
+        self.logger.info(f'Bot conectado como {self.user.name} (ID: {self.user.id})')
+        
+        # Configurar logger para Discord (agora que o bot está online)
+        set_bot_instance(self)
         
         # Sincronizar comandos slash
         try:
             synced = await self.tree.sync()
-            print(f'Sincronizados {len(synced)} comando(s) slash')
+            self.logger.info(f'Sincronizados {len(synced)} comando(s) slash')
         except Exception as e:
-            print(f'Erro ao sincronizar comandos: {e}')
+            self.logger.error('Erro ao sincronizar comandos slash', exc_info=e)
 
     async def on_message(self, message):
         """Processa mensagens"""
@@ -76,8 +91,36 @@ class NASASpaceAppsBot(commands.Bot):
         # Processar comandos
         await self.process_commands(message)
 
+    async def on_command_error(self, ctx, error):
+        """Trata erros de comandos de prefixo"""
+        self.logger.error(f'Erro em comando de prefixo: {ctx.command} por {ctx.author.id}', exc_info=error)
+        
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("Você não tem permissão para usar este comando.")
+        else:
+            await ctx.send("Ocorreu um erro ao executar o comando.")
+
+    async def on_app_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        """Trata erros de comandos slash"""
+        command_name = interaction.command.name if interaction.command else "unknown"
+        self.logger.error(f'Erro em comando slash: /{command_name} por {interaction.user.id}', exc_info=error)
+        
+        try:
+            if isinstance(error, discord.app_commands.MissingPermissions):
+                message = "Você não tem permissão para usar este comando."
+            else:
+                message = "Ocorreu um erro ao executar o comando."
+            
+            if interaction.response.is_done():
+                await interaction.followup.send(message, ephemeral=True)
+            else:
+                await interaction.response.send_message(message, ephemeral=True)
+        except:
+            pass
+
     async def close(self):
         """Limpeza ao fechar o bot"""
+        self.logger.info("Desconectando bot...")
         await DatabaseManager.close_engine()
         await super().close()
 
@@ -89,7 +132,7 @@ bot = NASASpaceAppsBot()
 async def setup_registration(ctx):
     """Comando para configurar o painel de inscrições"""
     embed = discord.Embed(
-        title="🚀 NASA Space Apps Challenge 2024 - Uberlândia",
+        title="🚀 NASA Space Apps Challenge 2025 - Uberlândia",
         description="""**O maior hackathon espacial do mundo chegou em Uberlândia!**
 
 O NASA Space Apps Challenge é uma competição internacional onde equipes do mundo todo se unem para resolver desafios reais da NASA usando dados abertos.
@@ -126,7 +169,7 @@ Clique no botão abaixo para fazer sua inscrição e garantir sua vaga!""",
         inline=False
     )
     
-    embed.set_footer(text="NASA Space Apps Challenge 2024 | Uberlândia, MG")
+    embed.set_footer(text="NASA Space Apps Challenge 2025 | Uberlândia, MG")
     embed.set_thumbnail(url="https://www.spaceappschallenge.org/assets/images/branding/space-apps-logo.png")
     
     view = RegistrationView()
@@ -236,7 +279,7 @@ async def export_registrations(ctx):
 async def setup_registration_slash(interaction: discord.Interaction):
     """Comando slash para configurar o painel de inscrições"""
     embed = discord.Embed(
-        title="🚀 NASA Space Apps Challenge 2024 - Uberlândia",
+        title="🚀 NASA Space Apps Challenge 2025 - Uberlândia",
         description="""**O maior hackathon espacial do mundo chegou em Uberlândia!**
 
 O NASA Space Apps Challenge é uma competição internacional onde equipes do mundo todo se unem para resolver desafios reais da NASA usando dados abertos.
@@ -273,7 +316,7 @@ Clique no botão abaixo para fazer sua inscrição e garantir sua vaga!""",
         inline=False
     )
     
-    embed.set_footer(text="NASA Space Apps Challenge 2024 | Uberlândia, MG")
+    embed.set_footer(text="NASA Space Apps Challenge 2025 | Uberlândia, MG")
     embed.set_thumbnail(url="https://www.spaceappschallenge.org/assets/images/branding/space-apps-logo.png")
     
     view = RegistrationView()
@@ -380,9 +423,13 @@ async def export_registrations_slash(interaction: discord.Interaction):
 @bot.tree.command(name='equipes', description='Painel para buscar equipes e se marcar como disponível')
 async def team_search_panel(interaction: discord.Interaction):
     """Comando slash para o painel de busca de equipes"""
-    embed = discord.Embed(
-        title="🔍 Sistema de Busca de Equipes",
-        description="""**Encontre a equipe perfeita para o NASA Space Apps Challenge!**
+    try:
+        bot.logger.log_command_execution('equipes', interaction.user.id, True)
+        bot.logger.log_user_action(interaction.user.id, 'comando_equipes', f'Canal: {interaction.channel.name}')
+        
+        embed = discord.Embed(
+            title="🔍 Sistema de Busca de Equipes",
+            description="""**Encontre a equipe perfeita para o NASA Space Apps Challenge!**
 
 🔍 **Ver Equipes Disponíveis** - Veja todas as equipes que estão procurando membros
 💼 **Marcar Como Disponível** - Se marque como disponível para outras equipes te convidarem
@@ -396,13 +443,30 @@ async def team_search_panel(interaction: discord.Interaction):
 5. Se aprovado, você será transferido para a nova equipe!
 
 **Importante:** Você pode estar em apenas uma equipe por vez.""",
-        color=discord.Color.blue()
-    )
-    embed.set_footer(text="NASA Space Apps Challenge 2024 - Sistema de Equipes")
-    
-    from views.team_search_view import TeamSearchView
-    view = TeamSearchView()
-    await interaction.response.send_message(embed=embed, view=view)
+            color=discord.Color.blue()
+        )
+        embed.set_footer(text="NASA Space Apps Challenge 2025 - Sistema de Equipes")
+        
+        from views.team_search_view import TeamSearchView
+        view = TeamSearchView()
+        await interaction.response.send_message(embed=embed, view=view)
+        
+    except Exception as e:
+        bot.logger.log_command_execution('equipes', interaction.user.id, False, str(e))
+        bot.logger.error(f'Erro no comando /equipes para usuário {interaction.user.id}', exc_info=e)
+        
+        try:
+            error_embed = discord.Embed(
+                title="❌ Erro",
+                description="Ocorreu um erro ao executar o comando. Tente novamente.",
+                color=discord.Color.red()
+            )
+            if interaction.response.is_done():
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(embed=error_embed, ephemeral=True)
+        except:
+            pass
 
 @bot.tree.command(name='aplicacoes', description='Gerenciar aplicações para sua equipe')
 async def manage_applications(interaction: discord.Interaction):

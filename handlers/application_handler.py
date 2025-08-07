@@ -3,63 +3,75 @@ from discord.ext import commands
 from sqlalchemy import select, and_, update
 from database.db import DatabaseManager
 from database.models import Participante, AplicacaoEquipe, StatusAplicacaoEnum
+from utils.logger import get_logger
 from datetime import datetime
 
 class ApplicationHandler:
     def __init__(self, bot):
         self.bot = bot
+        self.logger = get_logger()
 
     async def get_pending_applications(self, lider_user_id):
         """Busca aplicações pendentes para as equipes do líder"""
-        async with await DatabaseManager.get_session() as session:
-            # Buscar o líder
-            result = await session.execute(
-                select(Participante).where(Participante.discord_user_id == lider_user_id)
-            )
-            lider = result.scalars().first()
-            
-            if not lider:
-                return None, "Você não está inscrito no evento."
+        try:
+            async with await DatabaseManager.get_session() as session:
+                # Buscar o líder
+                result = await session.execute(
+                    select(Participante).where(Participante.discord_user_id == lider_user_id)
+                )
+                lider = result.scalars().first()
+                
+                if not lider:
+                    return None, "Você não está inscrito no evento."
 
-            # Buscar aplicações pendentes para a equipe do líder
-            result = await session.execute(
-                select(AplicacaoEquipe).where(
-                    and_(
-                        AplicacaoEquipe.lider_id == lider.id,
-                        AplicacaoEquipe.status == StatusAplicacaoEnum.PENDENTE
-                    )
-                ).order_by(AplicacaoEquipe.data_aplicacao.desc())
-            )
-            aplicacoes = result.scalars().all()
+                # Buscar aplicações pendentes para a equipe do líder
+                result = await session.execute(
+                    select(AplicacaoEquipe).where(
+                        and_(
+                            AplicacaoEquipe.lider_id == lider.id,
+                            AplicacaoEquipe.status == StatusAplicacaoEnum.PENDENTE
+                        )
+                    ).order_by(AplicacaoEquipe.data_aplicacao.desc())
+                )
+                aplicacoes = result.scalars().all()
 
-            return aplicacoes, None
+                return aplicacoes, None
+                
+        except Exception as e:
+            self.logger.error(f"Erro ao buscar aplicações pendentes para líder {lider_user_id}", exc_info=e)
+            return None, f"Erro interno: {str(e)}"
 
     async def respond_to_application(self, lider_user_id, aplicacao_id, aprovada, resposta_texto=None):
         """Responde a uma aplicação (aprovar ou rejeitar)"""
-        async with await DatabaseManager.get_session() as session:
-            # Buscar o líder
-            result = await session.execute(
-                select(Participante).where(Participante.discord_user_id == lider_user_id)
-            )
-            lider = result.scalars().first()
+        try:
+            self.logger.info(f"Líder {lider_user_id} respondendo aplicação {aplicacao_id}: {'Aprovada' if aprovada else 'Rejeitada'}")
             
-            if not lider:
-                return False, "Você não está inscrito no evento."
+            async with await DatabaseManager.get_session() as session:
+                # Buscar o líder
+                result = await session.execute(
+                    select(Participante).where(Participante.discord_user_id == lider_user_id)
+                )
+                lider = result.scalars().first()
+                
+                if not lider:
+                    self.logger.warning(f"Usuário {lider_user_id} tentou responder aplicação mas não está inscrito")
+                    return False, "Você não está inscrito no evento."
 
-            # Buscar a aplicação
-            result = await session.execute(
-                select(AplicacaoEquipe).where(
-                    and_(
-                        AplicacaoEquipe.id == aplicacao_id,
-                        AplicacaoEquipe.lider_id == lider.id,
-                        AplicacaoEquipe.status == StatusAplicacaoEnum.PENDENTE
+                # Buscar a aplicação
+                result = await session.execute(
+                    select(AplicacaoEquipe).where(
+                        and_(
+                            AplicacaoEquipe.id == aplicacao_id,
+                            AplicacaoEquipe.lider_id == lider.id,
+                            AplicacaoEquipe.status == StatusAplicacaoEnum.PENDENTE
+                        )
                     )
                 )
-            )
-            aplicacao = result.scalars().first()
+                aplicacao = result.scalars().first()
 
-            if not aplicacao:
-                return False, "Aplicação não encontrada ou já foi respondida."
+                if not aplicacao:
+                    self.logger.warning(f"Aplicação {aplicacao_id} não encontrada ou já respondida para líder {lider_user_id}")
+                    return False, "Aplicação não encontrada ou já foi respondida."
 
             # Atualizar status da aplicação
             novo_status = StatusAplicacaoEnum.APROVADA if aprovada else StatusAplicacaoEnum.REJEITADA
@@ -176,32 +188,41 @@ class ApplicationHandler:
                         inline=False
                     )
 
-                embed.set_footer(text="NASA Space Apps Challenge 2024 - Sistema de Equipes")
+                embed.set_footer(text="NASA Space Apps Challenge 2025 - Sistema de Equipes")
                 await aplicante_user.send(embed=embed)
                 
             except Exception as e:
                 print(f"Erro ao notificar aplicante: {e}")
 
             return True, "Resposta enviada com sucesso!"
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao responder aplicação {aplicacao_id} pelo líder {lider_user_id}", exc_info=e)
+            return False, f"Erro interno: {str(e)}"
 
     async def get_user_applications(self, user_id):
         """Busca aplicações do usuário"""
-        async with await DatabaseManager.get_session() as session:
-            result = await session.execute(
-                select(Participante).where(Participante.discord_user_id == user_id)
-            )
-            user_participante = result.scalars().first()
-            
-            if not user_participante:
-                return None, "Você não está inscrito no evento."
+        try:
+            async with await DatabaseManager.get_session() as session:
+                result = await session.execute(
+                    select(Participante).where(Participante.discord_user_id == user_id)
+                )
+                user_participante = result.scalars().first()
+                
+                if not user_participante:
+                    return None, "Você não está inscrito no evento."
 
-            result = await session.execute(
-                select(AplicacaoEquipe).where(AplicacaoEquipe.aplicante_id == user_participante.id)
-                .order_by(AplicacaoEquipe.data_aplicacao.desc())
-            )
-            aplicacoes = result.scalars().all()
+                result = await session.execute(
+                    select(AplicacaoEquipe).where(AplicacaoEquipe.aplicante_id == user_participante.id)
+                    .order_by(AplicacaoEquipe.data_aplicacao.desc())
+                )
+                aplicacoes = result.scalars().all()
 
-            return aplicacoes, None
+                return aplicacoes, None
+                
+        except Exception as e:
+            self.logger.error(f"Erro ao buscar aplicações do usuário {user_id}", exc_info=e)
+            return None, f"Erro interno: {str(e)}"
 
 
 class ApplicationResponseView(discord.ui.View):

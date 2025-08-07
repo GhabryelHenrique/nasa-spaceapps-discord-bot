@@ -83,20 +83,19 @@ class DatabaseSetup:
             }
         ]
 
-        with self.sync_engine.connect() as connection:
-            for enum_def in enums_sql:
-                try:
+        for enum_def in enums_sql:
+            try:
+                with self.sync_engine.connect() as connection:
                     values_str = "', '".join(enum_def['values'])
                     sql = f"CREATE TYPE {enum_def['name']} AS ENUM ('{values_str}')"
                     connection.execute(text(sql))
+                    connection.commit()
                     print(f"✅ Enum {enum_def['name']} criado")
-                except Exception as e:
-                    if "already exists" in str(e):
-                        print(f"ℹ️ Enum {enum_def['name']} já existe")
-                    else:
-                        print(f"⚠️ Erro ao criar {enum_def['name']}: {e}")
-            
-            connection.commit()
+            except Exception as e:
+                if "already exists" in str(e):
+                    print(f"ℹ️ Enum {enum_def['name']} já existe")
+                else:
+                    print(f"⚠️ Erro ao criar {enum_def['name']}: {e}")
 
     def create_tables(self):
         """Cria todas as tabelas"""

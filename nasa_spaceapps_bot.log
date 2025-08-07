@@ -1,0 +1,20 @@
+2025-08-07 19:31:43,854 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-08-07 19:31:43,923 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-08-07 19:31:43,955 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 40, in setup_hook
+    from handlers.application_handler import ApplicationHandler
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\handlers\application_handler.py", line 194
+    async def get_user_applications(self, user_id):
+SyntaxError: expected 'except' or 'finally' block
+2025-08-07 19:31:46,517 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-08-07 19:31:47,085 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-08-07 19:34:58,087 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-08-07 19:35:01,257 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-08-07 19:35:01,317 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-08-07 19:35:01,333 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-08-07 19:35:01,343 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-08-07 19:35:01,343 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-08-07 19:35:03,830 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-08-07 19:35:04,118 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-08-07 19:48:31,686 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...

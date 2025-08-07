@@ -39,7 +39,7 @@ class TeamInvitationView(discord.ui.View):
 Agora você tem acesso aos canais exclusivos da equipe. Boa sorte no NASA Space Apps Challenge! 🚀""",
                     color=discord.Color.green()
                 )
-                embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+                embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
                 
                 # Desabilitar botões
                 self.accept_invitation.disabled = True
@@ -85,7 +85,7 @@ Agora você tem acesso aos canais exclusivos da equipe. Boa sorte no NASA Space 
                 description=f"Você recusou o convite para a equipe **{self.team_data['nome_equipe']}**.\n\nSe mudar de ideia, entre em contato com o líder da equipe: <@{self.leader_id}>",
                 color=discord.Color.red()
             )
-            embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+            embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
             
             # Desabilitar botões
             self.accept_invitation.disabled = True
@@ -124,7 +124,7 @@ Agora você tem acesso aos canais exclusivos da equipe. Boa sorte no NASA Space 
                 description=f"O convite para a equipe **{self.team_data['nome_equipe']}** expirou.\n\nSe ainda tem interesse, entre em contato com o líder da equipe: <@{self.leader_id}>",
                 color=discord.Color.orange()
             )
-            embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+            embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
             
             # Tentar editar a mensagem original
             # Nota: Isso pode não funcionar se a mensagem for muito antiga

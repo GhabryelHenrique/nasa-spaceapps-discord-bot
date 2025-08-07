@@ -4,47 +4,70 @@ from sqlalchemy import select
 from database.db import DatabaseManager
 from database.models import Participante, EscolaridadeEnum, ModalidadeEnum
 from utils.helpers import validate_email, validate_cpf, validate_phone, validate_date
+from utils.logger import get_logger
 import asyncio
 
 class RegistrationHandler:
     def __init__(self, bot):
         self.bot = bot
         self.user_sessions = {}  # Armazena sessões de inscrição ativas
+        self.logger = get_logger()
 
     async def check_existing_registration(self, user_id):
         """Verifica se o usuário já está inscrito"""
-        async with await DatabaseManager.get_session() as session:
-            result = await session.execute(
-                select(Participante).where(Participante.discord_user_id == user_id)
-            )
-            return result.scalars().first() is not None
+        try:
+            async with await DatabaseManager.get_session() as session:
+                result = await session.execute(
+                    select(Participante).where(Participante.discord_user_id == user_id)
+                )
+                is_registered = result.scalars().first() is not None
+                self.logger.debug(f"Verificação de inscrição para usuário {user_id}: {'Já inscrito' if is_registered else 'Não inscrito'}")
+                return is_registered
+        except Exception as e:
+            self.logger.error(f"Erro ao verificar inscrição existente para usuário {user_id}", exc_info=e)
+            return True  # Assumir inscrito em caso de erro para evitar duplicatas
 
     async def start_registration_process(self, channel, user):
         """Inicia o processo de inscrição no canal privado"""
-        embed = discord.Embed(
-            title="🚀 NASA Space Apps Challenge - Uberlândia",
-            description="""Bem-vindo ao processo de inscrição!
+        try:
+            self.logger.log_user_action(user.id, "início_inscrição", f"Canal: {channel.name}")
+            
+            embed = discord.Embed(
+                title="🚀 NASA Space Apps Challenge - Uberlândia",
+                description="""Bem-vindo ao processo de inscrição!
 
 Vou fazer algumas perguntas para completar sua inscrição. Responda uma pergunta por vez com as informações solicitadas.
 
 **Você pode cancelar a qualquer momento digitando `cancelar`**""",
-            color=discord.Color.blue()
-        )
-        embed.set_footer(text="NASA Space Apps Challenge 2024")
-        
-        await channel.send(f"Olá {user.mention}!", embed=embed)
-        
-        # Inicializar sessão do usuário
-        self.user_sessions[user.id] = {
-            'channel': channel,
-            'step': 0,
-            'data': {},
-            'active': True
-        }
-        print(f"[DEBUG] Sessão criada para usuário {user.id}. Total de sessões: {len(self.user_sessions)}")
-        
-        # Começar com a primeira pergunta
-        await self.ask_next_question(user.id)
+                color=discord.Color.blue()
+            )
+            embed.set_footer(text="NASA Space Apps Challenge 2025")
+            
+            await channel.send(f"Olá {user.mention}!", embed=embed)
+            
+            # Inicializar sessão do usuário
+            self.user_sessions[user.id] = {
+                'channel': channel,
+                'step': 0,
+                'data': {},
+                'active': True
+            }
+            self.logger.debug(f"Sessão criada para usuário {user.id}. Total de sessões: {len(self.user_sessions)}")
+            
+            # Começar com a primeira pergunta
+            await self.ask_next_question(user.id)
+            
+        except Exception as e:
+            self.logger.error(f"Erro ao iniciar processo de inscrição para usuário {user.id}", exc_info=e)
+            try:
+                error_embed = discord.Embed(
+                    title="❌ Erro",
+                    description="Ocorreu um erro ao iniciar o processo de inscrição. Tente novamente ou contate um administrador.",
+                    color=discord.Color.red()
+                )
+                await channel.send(embed=error_embed)
+            except:
+                pass
 
     async def ask_next_question(self, user_id):
         """Faz a próxima pergunta do formulário"""
@@ -283,20 +306,18 @@ Vou fazer algumas perguntas para completar sua inscrição. Responda uma pergunt
         """Completa o processo de inscrição salvando no banco"""
         session = self.user_sessions.get(user_id)
         if not session:
+            self.logger.warning(f"Tentativa de completar inscrição sem sessão ativa para usuário {user_id}")
             return
         
         try:
+            self.logger.info(f"Completando inscrição para usuário {user_id}")
+            
             # Salvar no banco de dados
             async with await DatabaseManager.get_session() as db_session:
                 user = await self.bot.fetch_user(user_id)
                 
-                # Debug dos valores dos enums
-                print(f"[DEBUG] Escolaridade: {session['data']['escolaridade']} (tipo: {type(session['data']['escolaridade'])})")
-                print(f"[DEBUG] Modalidade: {session['data']['modalidade']} (tipo: {type(session['data']['modalidade'])})")
-                if hasattr(session['data']['escolaridade'], 'value'):
-                    print(f"[DEBUG] Escolaridade.value: {session['data']['escolaridade'].value}")
-                if hasattr(session['data']['modalidade'], 'value'):
-                    print(f"[DEBUG] Modalidade.value: {session['data']['modalidade'].value}")
+                # Log dos valores dos enums para debug
+                self.logger.debug(f"Dados de inscrição - Escolaridade: {session['data']['escolaridade']}, Modalidade: {session['data']['modalidade']}")
                 
                 participante = Participante(
                     discord_user_id=user_id,
@@ -317,6 +338,12 @@ Vou fazer algumas perguntas para completar sua inscrição. Responda uma pergunt
                 
                 db_session.add(participante)
                 await db_session.commit()
+                
+                self.logger.log_database_operation("INSERT", "participantes", True, 
+                    f"Usuário: {user.name}, Email: {session['data']['email']}, Equipe: {session['data']['nome_equipe']}")
+                
+                self.logger.log_user_action(user_id, "inscrição_completa", 
+                    f"Nome: {session['data']['nome']} {session['data']['sobrenome']}, Equipe: {session['data']['nome_equipe']}")
             
             # Embed de confirmação
             team_info = ""
@@ -349,7 +376,7 @@ Sua inscrição no NASA Space Apps Challenge foi realizada com sucesso!
 **Este canal será deletado em 10 segundos.**""",
                 color=discord.Color.gold()
             )
-            embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+            embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
             
             await session['channel'].send(embed=embed)
             
@@ -369,13 +396,18 @@ Sua inscrição no NASA Space Apps Challenge foi realizada com sucesso!
             session['active'] = False
             
         except Exception as e:
-            embed = discord.Embed(
-                title="Erro na Inscrição",
-                description="Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente ou entre em contato com a organização.",
-                color=discord.Color.red()
-            )
-            await session['channel'].send(embed=embed)
-            print(f"Erro ao salvar inscrição: {e}")
+            self.logger.error(f"Erro ao completar inscrição para usuário {user_id}", exc_info=e)
+            self.logger.log_database_operation("INSERT", "participantes", False, f"Usuário: {user_id}, Erro: {str(e)}")
+            
+            try:
+                embed = discord.Embed(
+                    title="Erro na Inscrição",
+                    description="Ocorreu um erro ao salvar sua inscrição. Por favor, tente novamente ou entre em contato com a organização.",
+                    color=discord.Color.red()
+                )
+                await session['channel'].send(embed=embed)
+            except Exception as send_error:
+                self.logger.error(f"Erro ao enviar mensagem de erro para usuário {user_id}", exc_info=send_error)
 
     async def create_team_infrastructure(self, guild, leader_id, team_data):
         """Cria role da equipe, categoria e canais"""
@@ -476,7 +508,7 @@ Sua inscrição no NASA Space Apps Challenge foi realizada com sucesso!
 Boa sorte! 🌟""",
                 color=discord.Color.gold()
             )
-            welcome_embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+            welcome_embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
             
             await text_channel.send(embed=welcome_embed)
             
@@ -517,7 +549,7 @@ O maior hackathon espacial do mundo! Você terá 48 horas para resolver desafios
 Você tem **1 hora** para responder a este convite.""",
                         color=discord.Color.blue()
                     )
-                    embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+                    embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
                     embed.set_thumbnail(url="https://www.spaceappschallenge.org/assets/images/branding/space-apps-logo.png")
                     
                     # Criar view com botões

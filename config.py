@@ -18,3 +18,6 @@ SMTP_SERVER = os.getenv('SMTP_SERVER')  # ex: smtp.gmail.com
 SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
 SMTP_USERNAME = os.getenv('SMTP_USERNAME')  # seu email
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')  # senha do app ou senha do email
+
+# Configurações de Logging
+LOG_CHANNEL_ID = int(os.getenv('LOG_CHANNEL_ID', '1402387427103998012'))  # Canal para logs de erro/warn

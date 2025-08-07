@@ -28,7 +28,7 @@ Por favor, **digite o email** que você usou para se inscrever no NASA Space App
 **Você pode cancelar a qualquer momento digitando `cancelar`**""",
             color=discord.Color.blue()
         )
-        embed.set_footer(text="NASA Space Apps Challenge 2024")
+        embed.set_footer(text="NASA Space Apps Challenge 2025")
         
         await channel.send(f"Olá {user.mention}!", embed=embed)
         
@@ -250,7 +250,7 @@ Por favor, **digite o email** que você usou para se inscrever no NASA Space App
             inline=False
         )
         
-        embed.set_footer(text="NASA Space Apps Challenge 2024 - Uberlândia")
+        embed.set_footer(text="NASA Space Apps Challenge 2025 - Uberlândia")
         
         await session['channel'].send(embed=embed)
         

@@ -223,4 +223,4 @@ Para dúvidas ou problemas:
 
 ---
 
-**NASA Space Apps Challenge 2024 - Uberlândia** 🚀
+**NASA Space Apps Challenge 2025 - Uberlândia** 🚀

@@ -14,6 +14,7 @@ This is a Discord bot for managing NASA Space Apps Challenge registrations in Ub
 - **Team search and application system**
 - **Availability marking for team-less participants**
 - **Application approval/rejection workflow for team leaders**
+- **Comprehensive logging system with Discord integration**
 - Administrative commands for statistics and data export
 - Email verification system for existing registrations
 
@@ -130,6 +131,7 @@ SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your_email
 SMTP_PASSWORD=your_app_password
+LOG_CHANNEL_ID=1402387427103998012  # Discord channel for error/warning logs
 ```
 
 ## Database Schema
@@ -199,6 +201,34 @@ Test the complete Discord integration flow:
 4. Team search and application system
 5. Administrative command execution
 
+## Logging System
+
+The bot includes a comprehensive logging system that:
+
+**Log Levels:**
+- **INFO**: General operations, successful actions
+- **WARNING**: Non-critical issues, failed operations
+- **ERROR**: Critical errors, exceptions
+
+**Log Destinations:**
+- **Console**: All logs (INFO and above)
+- **File**: All logs including DEBUG (`nasa_spaceapps_bot.log`)
+- **Discord Channel**: Only WARNING and ERROR logs sent as embeds
+
+**Key Logged Events:**
+- User registration attempts and completions
+- Database operations (success/failure)
+- Command executions
+- Team operations and applications
+- Bot startup/shutdown events
+- All errors with full stack traces
+
+**Discord Log Format:**
+- Colored embeds based on log level
+- Module, function, and line number information
+- Full error messages and stack traces
+- Timestamps and metadata
+
 ## Development Notes
 
 - Bot maintains persistent views for buttons across restarts
@@ -206,3 +236,4 @@ Test the complete Discord integration flow:
 - Registration channels are automatically deleted after successful completion
 - Team infrastructure persists until manually removed
 - All validation follows Brazilian standards (CPF format, phone with DDD)
+- **All errors and warnings are automatically sent to the configured Discord channel**

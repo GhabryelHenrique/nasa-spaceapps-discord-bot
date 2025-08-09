@@ -46,6 +46,13 @@ class NASASpaceAppsBot(commands.Bot):
             self.add_view(RegistrationView())
             from views.team_search_view import TeamSearchView
             self.add_view(TeamSearchView())
+            
+            # Views persistentes para sistema de matchmaking
+            from matchmaking.auto_team_notifications import AutoTeamResponseView
+            from matchmaking.team_channel_manager import TeamMatchmakingControlView
+            self.add_view(AutoTeamResponseView({}, None))  # View persistente para equipes automáticas
+            self.add_view(TeamMatchmakingControlView("", None))  # View persistente para controle de equipes
+            
             self.logger.info("Views persistentes adicionadas")
             
             # Adicionar views de convites (serão recriadas dinamicamente quando necessário)

@@ -430,3 +430,213 @@ class TeamApplicationModal(discord.ui.Modal, title="Aplicar Para Equipe"):
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             print(f"Erro ao processar aplicação: {e}")
+
+    @discord.ui.button(
+        label="🤖 Formar Equipes Automaticamente",
+        style=discord.ButtonStyle.primary,
+        custom_id="auto_form_teams",
+        emoji="🤖"
+    )
+    async def auto_form_teams(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Executa algoritmo de formação automática de equipes entre pessoas disponíveis"""
+        # Verificar se usuário é administrador
+        if not interaction.user.guild_permissions.administrator:
+            embed = discord.Embed(
+                title="⚠️ Permissão Necessária",
+                description="Apenas administradores podem executar a formação automática de equipes.",
+                color=discord.Color.orange()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        
+        await interaction.response.defer(ephemeral=True)
+        
+        try:
+            # Executar algoritmo de formação automática
+            from matchmaking.auto_team_notifications import AutoTeamNotificationSystem
+            
+            notification_system = AutoTeamNotificationSystem(interaction.client)
+            resultados = await notification_system.executar_formacao_completa()
+            
+            if not resultados["sucesso"]:
+                embed = discord.Embed(
+                    title="❌ Erro na Formação Automática",
+                    description=f"Erro: {resultados.get('erro', 'Erro desconhecido')}",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            if resultados["equipes_formadas"] == 0:
+                embed = discord.Embed(
+                    title="📭 Nenhuma Equipe Formada",
+                    description=resultados.get("motivo", "Não foi possível formar equipes no momento."),
+                    color=discord.Color.orange()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
+                return
+            
+            # Criar embed com resultados
+            embed = discord.Embed(
+                title="🤖 Formação Automática Executada!",
+                description="O algoritmo analisou todas as pessoas disponíveis e formou equipes automaticamente.",
+                color=discord.Color.green()
+            )
+            
+            embed.add_field(
+                name="🏆 Equipes Formadas",
+                value=f"**{resultados['equipes_formadas']}** novas equipes",
+                inline=True
+            )
+            
+            embed.add_field(
+                name="👥 Pessoas Agrupadas", 
+                value=f"**{resultados['participantes_agrupados']}** participantes",
+                inline=True
+            )
+            
+            embed.add_field(
+                name="📬 Notificações Enviadas",
+                value=f"**{resultados['notificacoes_enviadas']}** DMs enviadas",
+                inline=True
+            )
+            
+            if resultados["participantes_restantes"] > 0:
+                embed.add_field(
+                    name="⏳ Participantes Restantes",
+                    value=f"**{resultados['participantes_restantes']}** ainda procurando",
+                    inline=False
+                )
+            
+            # Mostrar distribuição por região
+            if resultados.get("grupos_por_regiao"):
+                regioes_text = ""
+                for regiao, count in resultados["grupos_por_regiao"].items():
+                    regioes_text += f"• **{regiao.replace('_', ' ').title()}**: {count} pessoas\n"
+                
+                embed.add_field(
+                    name="🌎 Distribuição Regional",
+                    value=regioes_text,
+                    inline=False
+                )
+            
+            # Mostrar algumas equipes formadas
+            if resultados.get("equipes_detalhes"):
+                equipes_preview = ""
+                for equipe in resultados["equipes_detalhes"][:3]:  # Mostrar apenas 3
+                    equipes_preview += f"🏆 **{equipe['nome_sugerido']}** ({equipe['tamanho']} membros, {equipe['score_compatibilidade']}%)\n"
+                
+                if len(resultados["equipes_detalhes"]) > 3:
+                    equipes_preview += f"... e mais {len(resultados['equipes_detalhes']) - 3} equipes"
+                
+                embed.add_field(
+                    name="🎯 Equipes Criadas",
+                    value=equipes_preview,
+                    inline=False
+                )
+            
+            embed.add_field(
+                name="📋 Próximos Passos",
+                value="• Participantes receberão notificações via DM\n• Cada pessoa pode aceitar ou rejeitar a equipe\n• Equipes são criadas quando todos os membros aceitam",
+                inline=False
+            )
+            
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            
+        except Exception as e:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description=f"Erro ao executar formação automática: {e}",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            print(f"Erro na formação automática de equipes: {e}")
+
+    @discord.ui.button(
+        label="🏢 Criar Canal de Controle",
+        style=discord.ButtonStyle.secondary,
+        custom_id="create_team_control_channel",
+        emoji="🏢"
+    )
+    async def create_team_control_channel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Cria canal de controle de matchmaking para líderes de equipe"""
+        try:
+            async with await DatabaseManager.get_session() as session:
+                # Buscar participante atual
+                result = await session.execute(
+                    select(Participante).where(Participante.discord_user_id == interaction.user.id)
+                )
+                user_participante = result.scalars().first()
+
+                if not user_participante:
+                    embed = discord.Embed(
+                        title="❌ Não Inscrito",
+                        description="Você precisa se inscrever no evento primeiro.",
+                        color=discord.Color.red()
+                    )
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    return
+
+                # Verificar se usuário tem equipe
+                if not user_participante.nome_equipe:
+                    embed = discord.Embed(
+                        title="⚠️ Sem Equipe",
+                        description="Você precisa criar uma equipe primeiro para ter um canal de controle.",
+                        color=discord.Color.orange()
+                    )
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                    return
+
+                await interaction.response.defer(ephemeral=True)
+
+                # Criar canal de controle
+                from matchmaking.team_channel_manager import TeamChannelManager
+                
+                channel_manager = TeamChannelManager(interaction.client)
+                canal_criado = await channel_manager.criar_canal_equipe(
+                    interaction.guild,
+                    user_participante,
+                    user_participante.nome_equipe
+                )
+
+                if canal_criado:
+                    embed = discord.Embed(
+                        title="🏢 Canal de Controle Criado!",
+                        description=f"Canal de matchmaking criado para a equipe **{user_participante.nome_equipe}**!",
+                        color=discord.Color.green()
+                    )
+                    
+                    embed.add_field(
+                        name="📱 Canal Criado",
+                        value=canal_criado.mention,
+                        inline=True
+                    )
+                    
+                    embed.add_field(
+                        name="🎯 Funcionalidades",
+                        value="• Ativar/Desativar matchmaking\n• Configurar habilidades procuradas\n• Ver estatísticas da equipe\n• Receber notificações de candidatos",
+                        inline=False
+                    )
+                    
+                    embed.add_field(
+                        name="👑 Acesso",
+                        value="Apenas você (líder da equipe) pode ver e usar este canal.",
+                        inline=False
+                    )
+                else:
+                    embed = discord.Embed(
+                        title="⚠️ Canal Já Existe",
+                        description="Sua equipe já possui um canal de controle de matchmaking.",
+                        color=discord.Color.orange()
+                    )
+
+                await interaction.followup.send(embed=embed, ephemeral=True)
+
+        except Exception as e:
+            embed = discord.Embed(
+                title="❌ Erro",
+                description="Erro ao criar canal de controle. Tente novamente.",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            print(f"Erro ao criar canal de controle: {e}")

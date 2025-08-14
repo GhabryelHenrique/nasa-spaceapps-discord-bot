@@ -7,14 +7,14 @@ Para configuração completa, use: python setup.py
 from database.setup import db_setup
 
 def main():
-    print("🗄️ Inicializando banco de dados...")
+    print("Inicializando banco de dados...")
     
     if db_setup.initialize_database():
-        print("✅ Banco de dados inicializado com sucesso!")
-        print("🚀 Execute 'python bot.py' para iniciar o bot")
+        print("Banco de dados inicializado com sucesso!")
+        print("Execute 'python bot.py' para iniciar o bot")
     else:
-        print("❌ Falha na inicialização do banco de dados")
-        print("💡 Para configuração completa, execute: python setup.py")
+        print("Falha na inicializacao do banco de dados")
+        print("Para configuracao completa, execute: python setup.py")
 
 if __name__ == "__main__":
     main()

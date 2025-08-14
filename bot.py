@@ -3,8 +3,8 @@ from discord.ext import commands
 import asyncio
 import config
 from database.db import create_tables, DatabaseManager
-from views.register_view import RegistrationView
-from handlers.registration_form import RegistrationHandler
+from views.mentoria_view import MentoriaRequestView
+from handlers.mentoria_handler import MentoriaHandler
 from utils.logger import get_logger, set_bot_instance
 
 # Configurações do bot
@@ -13,14 +13,14 @@ intents.message_content = True
 intents.guilds = True
 intents.members = True
 
-class NASASpaceAppsBot(commands.Bot):
+class MentoriaBot(commands.Bot):
     def __init__(self):
         super().__init__(
             command_prefix='!',
             intents=intents,
-            description="Bot para inscrições no NASA Space Apps Challenge - Uberlândia"
+            description="Bot para solicitações de mentoria"
         )
-        self.registration_handler = None
+        self.mentoria_handler = None
         self.logger = get_logger()
 
     async def setup_hook(self):
@@ -35,24 +35,11 @@ class NASASpaceAppsBot(commands.Bot):
             self.logger.info("Tabelas do banco de dados verificadas/criadas")
             
             # Inicializar handlers
-            self.registration_handler = RegistrationHandler(self)
-            from handlers.email_verification_handler import EmailVerificationHandler
-            from handlers.application_handler import ApplicationHandler
-            self.email_verification_handler = EmailVerificationHandler(self)
-            self.application_handler = ApplicationHandler(self)
+            self.mentoria_handler = MentoriaHandler(self)
             self.logger.info("Handlers inicializados")
             
             # Adicionar views persistentes
-            self.add_view(RegistrationView())
-            from views.team_search_view import TeamSearchView
-            self.add_view(TeamSearchView())
-            
-            # Views persistentes para sistema de matchmaking
-            from matchmaking.auto_team_notifications import AutoTeamResponseView
-            from matchmaking.team_channel_manager import TeamMatchmakingControlView
-            self.add_view(AutoTeamResponseView({}, None))  # View persistente para equipes automáticas
-            self.add_view(TeamMatchmakingControlView("", None))  # View persistente para controle de equipes
-            
+            self.add_view(MentoriaRequestView())
             self.logger.info("Views persistentes adicionadas")
             
             # Adicionar views de convites (serão recriadas dinamicamente quando necessário)
@@ -86,14 +73,10 @@ class NASASpaceAppsBot(commands.Bot):
         # Debug: Log da mensagem recebida
         print(f"Mensagem recebida de {message.author}: {message.content} no canal {message.channel.name}")
         
-        # Processar respostas do formulário de inscrição
-        if self.registration_handler:
-            print(f"Processando resposta do formulário para usuário {message.author.id}")
-            await self.registration_handler.process_answer(message)
-        
-        # Processar mensagens de verificação por email
-        if self.email_verification_handler:
-            await self.email_verification_handler.process_verification_message(message)
+        # Processar respostas do formulário de mentoria
+        if self.mentoria_handler:
+            print(f"Processando resposta do formulário de mentoria para usuário {message.author.id}")
+            await self.mentoria_handler.process_mentoria_answer(message)
         
         # Processar comandos
         await self.process_commands(message)
@@ -132,105 +115,130 @@ class NASASpaceAppsBot(commands.Bot):
         await super().close()
 
 # Instância do bot
-bot = NASASpaceAppsBot()
+bot = MentoriaBot()
 
 @bot.command(name='setup')
 @commands.has_permissions(administrator=True)
-async def setup_registration(ctx):
-    """Comando para configurar o painel de inscrições"""
+async def setup_mentoria(ctx):
+    """Comando para configurar o painel de mentoria"""
     embed = discord.Embed(
-        title="🚀 NASA Space Apps Challenge 2025 - Uberlândia",
-        description="""**O maior hackathon espacial do mundo chegou em Uberlândia!**
+        title="🎓 Sistema de Mentoria",
+        description="""**Bem-vindo ao sistema de solicitação de mentoria!**
 
-O NASA Space Apps Challenge é uma competição internacional onde equipes do mundo todo se unem para resolver desafios reais da NASA usando dados abertos.
+Aqui você pode solicitar ajuda de mentores experientes em diversas áreas do conhecimento.
 
-**📅 Data do Evento:** [Data a ser definida]
-**📍 Local:** Uberlândia, MG (presencial) ou Online (remoto)
+**Como funciona:**
+• Clique no botão abaixo para solicitar ajuda
+• Preencha o formulário com sua dúvida
+• Os mentores serão notificados
+• Um mentor assumirá sua solicitação
+• Você receberá ajuda personalizada!
 
-**O que você vai fazer:**
-• Formar equipes de até 6 pessoas
-• Escolher um desafio da NASA
-• Desenvolver uma solução em 48 horas
-• Concorrer a prêmios locais e globais
+**Áreas disponíveis:**
+• Programação (Python, JavaScript, Java, C++, etc.)
+• Desenvolvimento Web e Mobile
+• Ciência de Dados e Machine Learning
+• Design e UX/UI
+• DevOps e Cloud Computing
+• E muito mais!
 
-**Por que participar:**
-• Networking com outros desenvolvedores e cientistas
-• Aprender sobre tecnologias espaciais
-• Certificado de participação
-• Oportunidade de ganhar prêmios
-• Experiência única de inovação
-
-Clique no botão abaixo para fazer sua inscrição e garantir sua vaga!""",
+Clique no botão abaixo para solicitar mentoria!""",
         color=discord.Color.blue()
     )
     
     embed.add_field(
-        name="🎯 Público Alvo",
-        value="Estudantes, profissionais de TI, engenheiros, designers, cientistas e entusiastas da tecnologia espacial.",
+        name="🎯 Para quem é?",
+        value="Estudantes, profissionais iniciantes, e qualquer pessoa que precise de orientação técnica.",
         inline=False
     )
     
     embed.add_field(
-        name="💡 Habilidades Valorizadas",
-        value="Programação, design, ciência de dados, engenharia, comunicação e trabalho em equipe.",
+        name="⚡ Resposta rápida",
+        value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
         inline=False
     )
     
-    embed.set_footer(text="NASA Space Apps Challenge 2025 | Uberlândia, MG")
-    embed.set_thumbnail(url="https://www.spaceappschallenge.org/assets/images/branding/space-apps-logo.png")
+    embed.set_footer(text="Sistema de Mentoria | Solicite ajuda quando precisar!")
     
-    view = RegistrationView()
+    view = MentoriaRequestView()
     await ctx.send(embed=embed, view=view)
 
 @bot.command(name='stats')
 @commands.has_permissions(administrator=True)
-async def registration_stats(ctx):
-    """Mostra estatísticas das inscrições"""
+async def mentoria_stats(ctx):
+    """Mostra estatísticas das solicitações de mentoria"""
     try:
         from sqlalchemy import func, select
-        from database.models import Participante, ModalidadeEnum, EscolaridadeEnum
+        from database.models import SolicitacaoMentoria, StatusSolicitacaoEnum
         
         async with await DatabaseManager.get_session() as session:
-            # Total de inscrições
-            total_result = await session.execute(select(func.count(Participante.id)))
+            # Total de solicitações
+            total_result = await session.execute(select(func.count(SolicitacaoMentoria.id)))
             total = total_result.scalar()
             
-            # Por modalidade
-            modalidade_result = await session.execute(
-                select(Participante.modalidade, func.count(Participante.id))
-                .group_by(Participante.modalidade)
+            # Por status
+            status_result = await session.execute(
+                select(SolicitacaoMentoria.status, func.count(SolicitacaoMentoria.id))
+                .group_by(SolicitacaoMentoria.status)
             )
-            modalidades = modalidade_result.fetchall()
+            status_counts = status_result.fetchall()
             
-            # Por escolaridade
-            escolaridade_result = await session.execute(
-                select(Participante.escolaridade, func.count(Participante.id))
-                .group_by(Participante.escolaridade)
+            # Por área de conhecimento
+            area_result = await session.execute(
+                select(SolicitacaoMentoria.area_conhecimento, func.count(SolicitacaoMentoria.id))
+                .group_by(SolicitacaoMentoria.area_conhecimento)
+                .order_by(func.count(SolicitacaoMentoria.id).desc())
+                .limit(5)
             )
-            escolaridades = escolaridade_result.fetchall()
+            areas = area_result.fetchall()
+            
+            # Por urgência
+            urgencia_result = await session.execute(
+                select(SolicitacaoMentoria.nivel_urgencia, func.count(SolicitacaoMentoria.id))
+                .group_by(SolicitacaoMentoria.nivel_urgencia)
+            )
+            urgencias = urgencia_result.fetchall()
         
         embed = discord.Embed(
-            title="📊 Estatísticas de Inscrições",
-            description=f"**Total de Inscritos:** {total}",
+            title="📊 Estatísticas de Mentoria",
+            description=f"**Total de Solicitações:** {total}",
             color=discord.Color.green()
         )
         
-        # Modalidades
-        modalidade_text = ""
-        for modalidade, count in modalidades:
-            modalidade_text += f"• {modalidade.value}: {count}\n"
+        # Status
+        status_text = ""
+        status_emojis = {
+            'Pendente': '⏳',
+            'Em Andamento': '🔄',
+            'Concluída': '✅',
+            'Cancelada': '❌'
+        }
+        for status, count in status_counts:
+            emoji = status_emojis.get(status.value, '📝')
+            status_text += f"{emoji} {status.value}: {count}\n"
         
-        if modalidade_text:
-            embed.add_field(name="Por Modalidade", value=modalidade_text, inline=True)
+        if status_text:
+            embed.add_field(name="Por Status", value=status_text, inline=True)
         
-        # Escolaridades (top 5)
-        if escolaridades:
-            escolaridade_text = ""
-            sorted_escolaridades = sorted(escolaridades, key=lambda x: x[1], reverse=True)[:5]
-            for escolaridade, count in sorted_escolaridades:
-                escolaridade_text += f"• {escolaridade.value}: {count}\n"
-            
-            embed.add_field(name="Top 5 Escolaridades", value=escolaridade_text, inline=True)
+        # Áreas mais solicitadas
+        if areas:
+            area_text = ""
+            for area, count in areas:
+                area_text += f"• {area}: {count}\n"
+            embed.add_field(name="Top 5 Áreas", value=area_text, inline=True)
+        
+        # Por urgência
+        if urgencias:
+            urgencia_text = ""
+            urgencia_emojis = {
+                'Baixa': '🟢',
+                'Média': '🟡',
+                'Alta': '🔴'
+            }
+            for urgencia, count in urgencias:
+                emoji = urgencia_emojis.get(urgencia, '⚪')
+                urgencia_text += f"{emoji} {urgencia}: {count}\n"
+            embed.add_field(name="Por Urgência", value=urgencia_text, inline=True)
         
         await ctx.send(embed=embed)
         
@@ -239,463 +247,295 @@ async def registration_stats(ctx):
 
 @bot.command(name='export')
 @commands.has_permissions(administrator=True)
-async def export_registrations(ctx):
-    """Exporta lista de inscritos em formato texto"""
+async def export_solicitacoes(ctx):
+    """Exporta lista de solicitações de mentoria em formato texto"""
     try:
-        from database.models import Participante
+        from database.models import SolicitacaoMentoria
         from sqlalchemy import select
         
         async with await DatabaseManager.get_session() as session:
-            result = await session.execute(select(Participante).order_by(Participante.data_inscricao))
-            participantes = result.scalars().all()
+            result = await session.execute(select(SolicitacaoMentoria).order_by(SolicitacaoMentoria.data_solicitacao))
+            solicitacoes = result.scalars().all()
         
-        if not participantes:
-            await ctx.send("Nenhuma inscrição encontrada.")
+        if not solicitacoes:
+            await ctx.send("Nenhuma solicitação encontrada.")
             return
         
         # Criar arquivo texto
-        content = "LISTA DE INSCRITOS - NASA SPACE APPS CHALLENGE UBERLÂNDIA\n"
-        content += "=" * 60 + "\n\n"
+        content = "RELATÓRIO DE SOLICITAÇÕES DE MENTORIA\n"
+        content += "=" * 50 + "\n\n"
         
-        for i, p in enumerate(participantes, 1):
-            content += f"{i:03d}. {p.nome} {p.sobrenome}\n"
-            content += f"     Email: {p.email}\n"
-            content += f"     Telefone: {p.telefone}\n"
-            content += f"     Cidade: {p.cidade}\n"
-            content += f"     Escolaridade: {p.escolaridade.value}\n"
-            content += f"     Modalidade: {p.modalidade.value}\n"
-            content += f"     Data Inscrição: {p.data_inscricao.strftime('%d/%m/%Y %H:%M')}\n"
+        for i, s in enumerate(solicitacoes, 1):
+            content += f"{i:03d}. {s.titulo}\n"
+            content += f"     Solicitante: {s.discord_username}\n"
+            content += f"     Área: {s.area_conhecimento}\n"
+            content += f"     Urgência: {s.nivel_urgencia}\n"
+            content += f"     Status: {s.status.value}\n"
+            if s.mentor_username:
+                content += f"     Mentor: {s.mentor_username}\n"
+            content += f"     Data: {s.data_solicitacao.strftime('%d/%m/%Y %H:%M')}\n"
+            content += f"     Descrição: {s.descricao[:100]}{'...' if len(s.descricao) > 100 else ''}\n"
             content += "-" * 40 + "\n"
         
-        content += f"\nTotal: {len(participantes)} inscritos"
+        content += f"\nTotal: {len(solicitacoes)} solicitações"
         
         # Salvar em arquivo
-        with open("inscricoes_nasa_spaceapps.txt", "w", encoding="utf-8") as f:
+        with open("solicitacoes_mentoria.txt", "w", encoding="utf-8") as f:
             f.write(content)
         
         # Enviar arquivo
-        file = discord.File("inscricoes_nasa_spaceapps.txt")
-        await ctx.send("Lista de inscritos:", file=file)
+        file = discord.File("solicitacoes_mentoria.txt")
+        await ctx.send("Relatório de solicitações:", file=file)
         
     except Exception as e:
         await ctx.send(f"Erro ao exportar dados: {str(e)}")
 
 # Versões slash dos comandos
-@bot.tree.command(name='setup', description='Configurar o painel de inscrições')
+@bot.tree.command(name='setup', description='Configurar o painel de mentoria')
 @discord.app_commands.default_permissions(administrator=True)
-async def setup_registration_slash(interaction: discord.Interaction):
-    """Comando slash para configurar o painel de inscrições"""
+async def setup_mentoria_slash(interaction: discord.Interaction):
+    """Comando slash para configurar o painel de mentoria"""
     embed = discord.Embed(
-        title="🚀 NASA Space Apps Challenge 2025 - Uberlândia",
-        description="""**O maior hackathon espacial do mundo chegou em Uberlândia!**
+        title="🎓 Sistema de Mentoria",
+        description="""**Bem-vindo ao sistema de solicitação de mentoria!**
 
-O NASA Space Apps Challenge é uma competição internacional onde equipes do mundo todo se unem para resolver desafios reais da NASA usando dados abertos.
+Aqui você pode solicitar ajuda de mentores experientes em diversas áreas do conhecimento.
 
-**📅 Data do Evento:** [Data a ser definida]
-**📍 Local:** Uberlândia, MG (presencial) ou Online (remoto)
+**Como funciona:**
+• Clique no botão abaixo para solicitar ajuda
+• Preencha o formulário com sua dúvida
+• Os mentores serão notificados
+• Um mentor assumirá sua solicitação
+• Você receberá ajuda personalizada!
 
-**O que você vai fazer:**
-• Formar equipes de até 6 pessoas
-• Escolher um desafio da NASA
-• Desenvolver uma solução em 48 horas
-• Concorrer a prêmios locais e globais
+**Áreas disponíveis:**
+• Programação (Python, JavaScript, Java, C++, etc.)
+• Desenvolvimento Web e Mobile
+• Ciência de Dados e Machine Learning
+• Design e UX/UI
+• DevOps e Cloud Computing
+• E muito mais!
 
-**Por que participar:**
-• Networking com outros desenvolvedores e cientistas
-• Aprender sobre tecnologias espaciais
-• Certificado de participação
-• Oportunidade de ganhar prêmios
-• Experiência única de inovação
-
-Clique no botão abaixo para fazer sua inscrição e garantir sua vaga!""",
+Clique no botão abaixo para solicitar mentoria!""",
         color=discord.Color.blue()
     )
     
     embed.add_field(
-        name="🎯 Público Alvo",
-        value="Estudantes, profissionais de TI, engenheiros, designers, cientistas e entusiastas da tecnologia espacial.",
+        name="🎯 Para quem é?",
+        value="Estudantes, profissionais iniciantes, e qualquer pessoa que precise de orientação técnica.",
         inline=False
     )
     
     embed.add_field(
-        name="💡 Habilidades Valorizadas",
-        value="Programação, design, ciência de dados, engenharia, comunicação e trabalho em equipe.",
+        name="⚡ Resposta rápida",
+        value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
         inline=False
     )
     
-    embed.set_footer(text="NASA Space Apps Challenge 2025 | Uberlândia, MG")
-    embed.set_thumbnail(url="https://www.spaceappschallenge.org/assets/images/branding/space-apps-logo.png")
+    embed.set_footer(text="Sistema de Mentoria | Solicite ajuda quando precisar!")
     
-    view = RegistrationView()
+    view = MentoriaRequestView()
     await interaction.response.send_message(embed=embed, view=view)
 
-@bot.tree.command(name='stats', description='Mostrar estatísticas das inscrições')
+@bot.tree.command(name='stats', description='Mostrar estatísticas de mentoria')
 @discord.app_commands.default_permissions(administrator=True)
-async def registration_stats_slash(interaction: discord.Interaction):
-    """Comando slash para mostrar estatísticas das inscrições"""
+async def mentoria_stats_slash(interaction: discord.Interaction):
+    """Comando slash para mostrar estatísticas de mentoria"""
     try:
         from sqlalchemy import func, select
-        from database.models import Participante, ModalidadeEnum, EscolaridadeEnum
+        from database.models import SolicitacaoMentoria, StatusSolicitacaoEnum
         
         async with await DatabaseManager.get_session() as session:
-            # Total de inscrições
-            total_result = await session.execute(select(func.count(Participante.id)))
+            # Total de solicitações
+            total_result = await session.execute(select(func.count(SolicitacaoMentoria.id)))
             total = total_result.scalar()
             
-            # Por modalidade
-            modalidade_result = await session.execute(
-                select(Participante.modalidade, func.count(Participante.id))
-                .group_by(Participante.modalidade)
+            # Por status
+            status_result = await session.execute(
+                select(SolicitacaoMentoria.status, func.count(SolicitacaoMentoria.id))
+                .group_by(SolicitacaoMentoria.status)
             )
-            modalidades = modalidade_result.fetchall()
+            status_counts = status_result.fetchall()
             
-            # Por escolaridade
-            escolaridade_result = await session.execute(
-                select(Participante.escolaridade, func.count(Participante.id))
-                .group_by(Participante.escolaridade)
+            # Por área de conhecimento
+            area_result = await session.execute(
+                select(SolicitacaoMentoria.area_conhecimento, func.count(SolicitacaoMentoria.id))
+                .group_by(SolicitacaoMentoria.area_conhecimento)
+                .order_by(func.count(SolicitacaoMentoria.id).desc())
+                .limit(5)
             )
-            escolaridades = escolaridade_result.fetchall()
+            areas = area_result.fetchall()
         
         embed = discord.Embed(
-            title="📊 Estatísticas de Inscrições",
-            description=f"**Total de Inscritos:** {total}",
+            title="📊 Estatísticas de Mentoria",
+            description=f"**Total de Solicitações:** {total}",
             color=discord.Color.green()
         )
         
-        # Modalidades
-        modalidade_text = ""
-        for modalidade, count in modalidades:
-            modalidade_text += f"• {modalidade.value}: {count}\n"
+        # Status
+        status_text = ""
+        status_emojis = {
+            'Pendente': '⏳',
+            'Em Andamento': '🔄',
+            'Concluída': '✅',
+            'Cancelada': '❌'
+        }
+        for status, count in status_counts:
+            emoji = status_emojis.get(status.value, '📝')
+            status_text += f"{emoji} {status.value}: {count}\n"
         
-        if modalidade_text:
-            embed.add_field(name="Por Modalidade", value=modalidade_text, inline=True)
+        if status_text:
+            embed.add_field(name="Por Status", value=status_text, inline=True)
         
-        # Escolaridades (top 5)
-        if escolaridades:
-            escolaridade_text = ""
-            sorted_escolaridades = sorted(escolaridades, key=lambda x: x[1], reverse=True)[:5]
-            for escolaridade, count in sorted_escolaridades:
-                escolaridade_text += f"• {escolaridade.value}: {count}\n"
-            
-            embed.add_field(name="Top 5 Escolaridades", value=escolaridade_text, inline=True)
+        # Áreas mais solicitadas
+        if areas:
+            area_text = ""
+            for area, count in areas:
+                area_text += f"• {area}: {count}\n"
+            embed.add_field(name="Top 5 Áreas", value=area_text, inline=True)
         
         await interaction.response.send_message(embed=embed)
         
     except Exception as e:
         await interaction.response.send_message(f"Erro ao buscar estatísticas: {str(e)}")
 
-@bot.tree.command(name='export', description='Exportar lista de inscritos em formato texto')
+@bot.tree.command(name='export', description='Exportar relatório de solicitações de mentoria')
 @discord.app_commands.default_permissions(administrator=True)
-async def export_registrations_slash(interaction: discord.Interaction):
-    """Comando slash para exportar lista de inscritos"""
+async def export_solicitacoes_slash(interaction: discord.Interaction):
+    """Comando slash para exportar relatório de solicitações"""
     try:
-        from database.models import Participante
+        from database.models import SolicitacaoMentoria
         from sqlalchemy import select
         
         async with await DatabaseManager.get_session() as session:
-            result = await session.execute(select(Participante).order_by(Participante.data_inscricao))
-            participantes = result.scalars().all()
+            result = await session.execute(select(SolicitacaoMentoria).order_by(SolicitacaoMentoria.data_solicitacao))
+            solicitacoes = result.scalars().all()
         
-        if not participantes:
-            await interaction.response.send_message("Nenhuma inscrição encontrada.")
+        if not solicitacoes:
+            await interaction.response.send_message("Nenhuma solicitação encontrada.")
             return
         
         # Criar arquivo texto
-        content = "LISTA DE INSCRITOS - NASA SPACE APPS CHALLENGE UBERLÂNDIA\n"
-        content += "=" * 60 + "\n\n"
+        content = "RELATÓRIO DE SOLICITAÇÕES DE MENTORIA\n"
+        content += "=" * 50 + "\n\n"
         
-        for i, p in enumerate(participantes, 1):
-            content += f"{i:03d}. {p.nome} {p.sobrenome}\n"
-            content += f"     Email: {p.email}\n"
-            content += f"     Telefone: {p.telefone}\n"
-            content += f"     Cidade: {p.cidade}\n"
-            content += f"     Escolaridade: {p.escolaridade.value}\n"
-            content += f"     Modalidade: {p.modalidade.value}\n"
-            content += f"     Data Inscrição: {p.data_inscricao.strftime('%d/%m/%Y %H:%M')}\n"
+        for i, s in enumerate(solicitacoes, 1):
+            content += f"{i:03d}. {s.titulo}\n"
+            content += f"     Solicitante: {s.discord_username}\n"
+            content += f"     Área: {s.area_conhecimento}\n"
+            content += f"     Urgência: {s.nivel_urgencia}\n"
+            content += f"     Status: {s.status.value}\n"
+            if s.mentor_username:
+                content += f"     Mentor: {s.mentor_username}\n"
+            content += f"     Data: {s.data_solicitacao.strftime('%d/%m/%Y %H:%M')}\n"
+            content += f"     Descrição: {s.descricao[:100]}{'...' if len(s.descricao) > 100 else ''}\n"
             content += "-" * 40 + "\n"
         
-        content += f"\nTotal: {len(participantes)} inscritos"
+        content += f"\nTotal: {len(solicitacoes)} solicitações"
         
         # Salvar em arquivo
-        with open("inscricoes_nasa_spaceapps.txt", "w", encoding="utf-8") as f:
+        with open("solicitacoes_mentoria.txt", "w", encoding="utf-8") as f:
             f.write(content)
         
         # Enviar arquivo
-        file = discord.File("inscricoes_nasa_spaceapps.txt")
-        await interaction.response.send_message("Lista de inscritos:", file=file)
+        file = discord.File("solicitacoes_mentoria.txt")
+        await interaction.response.send_message("Relatório de solicitações:", file=file)
+        
+        # Limpar arquivo após envio
+        import os
+        try:
+            os.remove("solicitacoes_mentoria.txt")
+        except:
+            pass
         
     except Exception as e:
         await interaction.response.send_message(f"Erro ao exportar dados: {str(e)}")
 
-@bot.tree.command(name='equipes', description='Painel para buscar equipes e se marcar como disponível')
-async def team_search_panel(interaction: discord.Interaction):
-    """Comando slash para o painel de busca de equipes"""
+# Comando para listar solicitações pendentes (apenas mentores)
+@bot.tree.command(name='solicitacoes', description='Ver solicitações de mentoria pendentes')
+async def list_solicitacoes(interaction: discord.Interaction):
+    """Lista solicitações pendentes para mentores"""
     try:
-        bot.logger.log_command_execution('equipes', interaction.user.id, True)
-        bot.logger.log_user_action(interaction.user.id, 'comando_equipes', f'Canal: {interaction.channel.name}')
-        
-        embed = discord.Embed(
-            title="🔍 Sistema de Busca de Equipes",
-            description="""**Encontre a equipe perfeita para o NASA Space Apps Challenge!**
-
-🔍 **Ver Equipes Disponíveis** - Veja todas as equipes que estão procurando membros
-💼 **Marcar Como Disponível** - Se marque como disponível para outras equipes te convidarem
-👥 **Ver Pessoas Disponíveis** - (Apenas líderes) Veja pessoas procurando equipes
-
-**Como funciona:**
-1. Marque-se como disponível e descreva suas habilidades
-2. Procure equipes que combinem com você
-3. Envie uma aplicação explicando por que quer se juntar
-4. Aguarde a resposta do líder da equipe
-5. Se aprovado, você será transferido para a nova equipe!
-
-**Importante:** Você pode estar em apenas uma equipe por vez.""",
-            color=discord.Color.blue()
-        )
-        embed.set_footer(text="NASA Space Apps Challenge 2025 - Sistema de Equipes")
-        
-        from views.team_search_view import TeamSearchView
-        view = TeamSearchView()
-        await interaction.response.send_message(embed=embed, view=view)
-        
-    except Exception as e:
-        bot.logger.log_command_execution('equipes', interaction.user.id, False, str(e))
-        bot.logger.error(f'Erro no comando /equipes para usuário {interaction.user.id}', exc_info=e)
-        
-        try:
-            error_embed = discord.Embed(
-                title="❌ Erro",
-                description="Ocorreu um erro ao executar o comando. Tente novamente.",
-                color=discord.Color.red()
+        # Verificar se usuário tem papel de mentor
+        if not any(role.name.lower() == 'mentor' for role in interaction.user.roles):
+            await interaction.response.send_message(
+                "❌ Apenas mentores podem usar este comando.",
+                ephemeral=True
             )
-            if interaction.response.is_done():
-                await interaction.followup.send(embed=error_embed, ephemeral=True)
-            else:
-                await interaction.response.send_message(embed=error_embed, ephemeral=True)
-        except:
-            pass
-
-@bot.tree.command(name='aplicacoes', description='Gerenciar aplicações para sua equipe')
-async def manage_applications(interaction: discord.Interaction):
-    """Comando slash para gerenciar aplicações"""
-    try:
-        aplicacoes, erro = await bot.application_handler.get_pending_applications(interaction.user.id)
-        
-        if erro:
-            embed = discord.Embed(
-                title="❌ Erro",
-                description=erro,
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
-
-        if not aplicacoes:
+        
+        from sqlalchemy import select
+        from database.models import SolicitacaoMentoria, StatusSolicitacaoEnum
+        
+        async with await DatabaseManager.get_session() as session:
+            result = await session.execute(
+                select(SolicitacaoMentoria)
+                .where(SolicitacaoMentoria.status == StatusSolicitacaoEnum.PENDENTE)
+                .order_by(SolicitacaoMentoria.data_solicitacao.desc())
+                .limit(10)
+            )
+            solicitacoes = result.scalars().all()
+        
+        if not solicitacoes:
             embed = discord.Embed(
-                title="📭 Nenhuma Aplicação Pendente",
-                description="Você não tem aplicações pendentes para sua equipe no momento.",
+                title="📭 Nenhuma Solicitação Pendente",
+                description="Não há solicitações pendentes no momento.",
                 color=discord.Color.orange()
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
-
-        # Mostrar aplicações pendentes
+        
         embed = discord.Embed(
-            title="📥 Aplicações Pendentes Para Sua Equipe",
-            description=f"Você tem **{len(aplicacoes)}** aplicação(ões) pendente(s)",
+            title="📋 Solicitações Pendentes",
+            description=f"**{len(solicitacoes)}** solicitação(ões) aguardando mentor",
             color=discord.Color.blue()
         )
-
-        for i, aplicacao in enumerate(aplicacoes[:5], 1):  # Máximo 5 por vez
-            aplicante = aplicacao.aplicante
+        
+        urgencia_emojis = {
+            'Baixa': '🟢',
+            'Média': '🟡',
+            'Alta': '🔴'
+        }
+        
+        for s in solicitacoes[:5]:
+            urgencia_emoji = urgencia_emojis.get(s.nivel_urgencia, '⚪')
             
-            field_value = f"**Candidato:** {aplicante.nome} {aplicante.sobrenome}\n"
-            field_value += f"**Escolaridade:** {aplicante.escolaridade.value}\n"
-            field_value += f"**Cidade:** {aplicante.cidade}\n"
-            
-            if aplicacao.mensagem_aplicacao:
-                msg = aplicacao.mensagem_aplicacao[:100]
-                if len(aplicacao.mensagem_aplicacao) > 100:
-                    msg += "..."
-                field_value += f"**Mensagem:** {msg}\n"
-            
-            if aplicante.descricao_habilidades:
-                hab = aplicante.descricao_habilidades[:100]
-                if len(aplicante.descricao_habilidades) > 100:
-                    hab += "..."
-                field_value += f"**Habilidades:** {hab}"
+            field_value = f"**Solicitante:** {s.discord_username}\n"
+            field_value += f"**Área:** {s.area_conhecimento}\n"
+            field_value += f"**Urgência:** {urgencia_emoji} {s.nivel_urgencia}\n"
+            field_value += f"**Data:** {s.data_solicitacao.strftime('%d/%m %H:%M')}\n"
+            field_value += f"**Descrição:** {s.descricao[:100]}{'...' if len(s.descricao) > 100 else ''}"
             
             embed.add_field(
-                name=f"📝 Aplicação #{aplicacao.id}",
+                name=f"#{s.id} - {s.titulo}",
                 value=field_value,
                 inline=False
             )
-
-        embed.set_footer(text="Use os botões abaixo para responder às aplicações")
-
-        # Criar view com botões para cada aplicação
-        view = ApplicationManagementView(aplicacoes[:5], bot.application_handler)
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
-
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        
     except Exception as e:
-        embed = discord.Embed(
-            title="❌ Erro",
-            description="Ocorreu um erro ao buscar aplicações. Tente novamente.",
-            color=discord.Color.red()
+        await interaction.response.send_message(
+            "❌ Erro ao buscar solicitações.",
+            ephemeral=True
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        print(f"Erro ao buscar aplicações: {e}")
-
-@bot.tree.command(name='minhas_aplicacoes', description='Ver suas aplicações enviadas')
-async def my_applications(interaction: discord.Interaction):
-    """Comando slash para ver aplicações do usuário"""
-    try:
-        aplicacoes, erro = await bot.application_handler.get_user_applications(interaction.user.id)
-        
-        if erro:
-            embed = discord.Embed(
-                title="❌ Erro",
-                description=erro,
-                color=discord.Color.red()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-
-        if not aplicacoes:
-            embed = discord.Embed(
-                title="📭 Nenhuma Aplicação",
-                description="Você ainda não enviou nenhuma aplicação para equipes.\n\nUse `/equipes` para procurar equipes disponíveis!",
-                color=discord.Color.orange()
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return
-
-        embed = discord.Embed(
-            title="📝 Suas Aplicações",
-            description=f"Você tem **{len(aplicacoes)}** aplicação(ões) enviada(s)",
-            color=discord.Color.blue()
-        )
-
-        for aplicacao in aplicacoes[:10]:  # Máximo 10
-            status_emoji = {
-                'Pendente': '⏳',
-                'Aprovada': '✅',
-                'Rejeitada': '❌',
-                'Cancelada': '🚫'
-            }
-            
-            status_color = {
-                'Pendente': '🟡',
-                'Aprovada': '🟢',
-                'Rejeitada': '🔴',
-                'Cancelada': '⚫'
-            }
-
-            field_value = f"{status_color.get(aplicacao.status.value, '⚪')} **Status:** {aplicacao.status.value}\n"
-            field_value += f"📅 **Enviada em:** {aplicacao.data_aplicacao.strftime('%d/%m/%Y %H:%M')}\n"
-            
-            if aplicacao.data_resposta:
-                field_value += f"📅 **Respondida em:** {aplicacao.data_resposta.strftime('%d/%m/%Y %H:%M')}\n"
-            
-            if aplicacao.resposta_lider:
-                resp = aplicacao.resposta_lider[:100]
-                if len(aplicacao.resposta_lider) > 100:
-                    resp += "..."
-                field_value += f"💬 **Resposta:** {resp}"
-
-            embed.add_field(
-                name=f"{status_emoji.get(aplicacao.status.value, '📝')} {aplicacao.equipe_nome}",
-                value=field_value,
-                inline=False
-            )
-
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    except Exception as e:
-        embed = discord.Embed(
-            title="❌ Erro",
-            description="Ocorreu um erro ao buscar suas aplicações.",
-            color=discord.Color.red()
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-        print(f"Erro ao buscar aplicações do usuário: {e}")
+        bot.logger.error(f"Erro ao listar solicitações", exc_info=e)
 
 
-class ApplicationManagementView(discord.ui.View):
-    def __init__(self, aplicacoes, handler):
-        super().__init__(timeout=300)
-        self.aplicacoes = aplicacoes
-        self.handler = handler
-        
-        # Adicionar botões para cada aplicação
-        for i, aplicacao in enumerate(aplicacoes[:5], 1):
-            # Botão para ver detalhes
-            self.add_item(ApplicationDetailButton(aplicacao, i, handler))
-
-class ApplicationDetailButton(discord.ui.Button):
-    def __init__(self, aplicacao, number, handler):
-        super().__init__(
-            label=f"Ver Aplicação #{aplicacao.id}",
-            style=discord.ButtonStyle.secondary,
-            emoji="👤"
-        )
-        self.aplicacao = aplicacao
-        self.handler = handler
-
-    async def callback(self, interaction: discord.Interaction):
-        # Mostrar detalhes da aplicação com botões de aprovação/rejeição
-        aplicante = self.aplicacao.aplicante
-        
-        embed = discord.Embed(
-            title=f"📝 Aplicação #{self.aplicacao.id} - {aplicante.nome} {aplicante.sobrenome}",
-            color=discord.Color.blue()
-        )
-        
-        embed.add_field(
-            name="👤 Dados do Candidato",
-            value=f"**Nome:** {aplicante.nome} {aplicante.sobrenome}\n**Email:** {aplicante.email}\n**Cidade:** {aplicante.cidade}\n**Escolaridade:** {aplicante.escolaridade.value}\n**Modalidade:** {aplicante.modalidade.value}",
-            inline=False
-        )
-        
-        if self.aplicacao.mensagem_aplicacao:
-            embed.add_field(
-                name="💬 Mensagem do Candidato",
-                value=self.aplicacao.mensagem_aplicacao,
-                inline=False
-            )
-        
-        if aplicante.descricao_habilidades:
-            embed.add_field(
-                name="🛠️ Habilidades",
-                value=aplicante.descricao_habilidades,
-                inline=False
-            )
-        
-        embed.add_field(
-            name="📅 Data da Aplicação",
-            value=self.aplicacao.data_aplicacao.strftime('%d/%m/%Y às %H:%M'),
-            inline=True
-        )
-        
-        embed.set_footer(text="Escolha uma ação abaixo")
-        
-        # View com botões de aprovação/rejeição
-        from handlers.application_handler import ApplicationResponseView
-        view = ApplicationResponseView(self.aplicacao.id, self.handler)
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 # Error handlers para comandos de prefixo
-@setup_registration.error
-@registration_stats.error
-@export_registrations.error
+@setup_mentoria.error
+@mentoria_stats.error
+@export_solicitacoes.error
 async def command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("Você não tem permissão para usar este comando.")
 
 # Error handlers para comandos slash
-@setup_registration_slash.error
-@registration_stats_slash.error
-@export_registrations_slash.error
+@setup_mentoria_slash.error
+@mentoria_stats_slash.error
+@export_solicitacoes_slash.error
+@list_solicitacoes.error
 async def slash_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     if isinstance(error, discord.app_commands.MissingPermissions):
         if not interaction.response.is_done():

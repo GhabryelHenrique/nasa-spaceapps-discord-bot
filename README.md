@@ -1,33 +1,35 @@
-# NASA Space Apps Bot - Sistema de Inscrições
+# Bot Discord de Mentoria
 
-Bot Discord para gerenciar inscrições no NASA Space Apps Challenge em Uberlândia, com sistema de formulário interativo e canais privados.
+Bot Discord para gerenciar solicitações de mentoria, conectando usuários com mentores experientes em diversas áreas técnicas.
 
 ## 🚀 Funcionalidades
 
-- **Inscrição Interativa**: Sistema de perguntas sequenciais em canais privados
-- **Validação de Dados**: CPF, email, telefone e datas validados automaticamente
-- **Banco PostgreSQL**: Armazenamento seguro de todas as inscrições
-- **Painel Administrativo**: Comandos para estatísticas e exportação de dados
-- **Sistema de Canais**: Canal privado criado automaticamente para cada usuário
+- **Solicitação Interativa**: Sistema de perguntas sequenciais em canais privados
+- **Validação de Dados**: Título, área, descrição e urgência validados automaticamente
+- **Banco PostgreSQL**: Armazenamento seguro de todas as solicitações
+- **Notificação de Mentores**: Mentores são automaticamente notificados sobre novas solicitações
+- **Sistema de Canais**: Canal privado criado automaticamente para cada solicitação ou fallback para DM
 
 ## 📁 Estrutura do Projeto
 
 ```
-nasa-spaceapps-bot/
+mentoria-bot/
 │
 ├── bot.py                      # Arquivo principal (roda o bot)
 ├── config.py                  # Configurações do projeto (token, banco)
 ├── init_db.py                 # Script para inicializar banco
 ├── database/
 │   ├── __init__.py
-│   ├── models.py              # Modelo SQLAlchemy do participante
-│   └── db.py                  # Conexão com o PostgreSQL
+│   ├── models.py              # Modelo SQLAlchemy de solicitações
+│   ├── db.py                  # Conexão com o PostgreSQL
+│   └── setup.py               # Setup do banco de dados
 ├── views/
-│   └── register_view.py       # View com botão de inscrição
+│   └── mentoria_view.py       # View com botão de solicitação
 ├── handlers/
-│   └── registration_form.py   # Etapas de pergunta e coleta de dados
+│   └── mentoria_handler.py    # Etapas de pergunta e coleta de dados
 ├── utils/
-│   └── helpers.py             # Funções auxiliares (validação, etc)
+│   └── helpers.py             # Funções auxiliares
+│   └── logger.py              # Sistema de logging
 ├── requirements.txt           # Dependências do projeto
 ├── .env                       # Variáveis de ambiente
 └── README.md                  # Este arquivo
@@ -45,7 +47,7 @@ nasa-spaceapps-bot/
 
 ```bash
 git clone <seu-repositorio>
-cd nasa-spaceapps-bot
+cd mentoria-bot
 
 # Configurar arquivo .env
 cp .env.example .env
@@ -72,11 +74,11 @@ python bot.py
 
 ```sql
 -- Criar banco de dados
-CREATE DATABASE nasa_spaceapps;
+CREATE DATABASE mentoria_db;
 
 -- Criar usuário (opcional)
 CREATE USER bot_user WITH PASSWORD 'senha_segura';
-GRANT ALL PRIVILEGES ON DATABASE nasa_spaceapps TO bot_user;
+GRANT ALL PRIVILEGES ON DATABASE mentoria_db TO bot_user;
 ```
 
 ## 🎮 Como Usar
@@ -85,10 +87,10 @@ GRANT ALL PRIVILEGES ON DATABASE nasa_spaceapps TO bot_user;
 
 #### Comandos Slash (Recomendado):
 ```
-/setup     - Configurar painel de inscrições
-/stats     - Ver estatísticas
-/export    - Exportar lista de inscritos
-/aplicacoes - Gerenciar aplicações para sua equipe
+/setup        - Configurar painel de solicitação de mentoria
+/stats        - Ver estatísticas das solicitações
+/export       - Exportar relatório de solicitações
+/solicitacoes - Ver solicitações pendentes (apenas mentores)
 ```
 
 #### Comandos de Texto (Alternativos):
@@ -98,65 +100,81 @@ GRANT ALL PRIVILEGES ON DATABASE nasa_spaceapps TO bot_user;
 
 ### Para Usuários
 
-#### Inscrição:
-1. Clique no botão "🚀 Fazer Inscrição NASA Space Apps"
-2. Um canal privado será criado automaticamente
-3. Responda às perguntas uma por vez
-4. Sua inscrição será salva no banco de dados
+#### Solicitar Mentoria:
+1. Clique no botão "🆘 Solicitar Ajuda"
+2. Um canal privado será criado automaticamente (ou DM como fallback)
+3. Responda às perguntas sequencialmente:
+   - Título da solicitação
+   - Área de conhecimento
+   - Descrição detalhada
+   - Nível de urgência
+4. Sua solicitação será salva e os mentores notificados
 
-#### Sistema de Equipes:
-1. Use `/equipes` ou clique em "🔍 Buscar Equipes"
-2. Marque-se como disponível para outras equipes
-3. Procure equipes que combinem com você
-4. Envie aplicações para equipes de interesse
-5. Use `/minhas_aplicacoes` para acompanhar o status
+### Para Mentores
+
+#### Assumir Solicitações:
+1. Monitore o canal #mentores para novas notificações
+2. Clique em "✋ Assumir Mentoria" na solicitação de interesse
+3. O sistema atualizará automaticamente o status
+4. Entre em contato com o solicitante através do Discord
 
 ## 📋 Dados Coletados
 
-O bot coleta as seguintes informações:
+O bot coleta as seguintes informações para solicitações de mentoria:
 
-- **Dados Pessoais**:
-  - Nome e Sobrenome
-  - Email
-  - Telefone
-  - CPF
-  - Cidade de residência
-  - Data de nascimento
+- **Identificação**:
+  - Discord User ID
+  - Discord Username
 
-- **Dados Acadêmicos**:
-  - Escolaridade (9 opções disponíveis)
+- **Dados da Solicitação**:
+  - Título (máx. 200 caracteres)
+  - Área de conhecimento (ex: Python, JavaScript, etc.)
+  - Descrição detalhada (máx. 2000 caracteres)
+  - Nível de urgência (Baixa, Média, Alta)
 
-- **Dados do Evento**:
-  - Modalidade de participação (Presencial ou Remoto)
+- **Tracking**:
+  - Status da solicitação (Pendente, Em Andamento, Concluída, Cancelada)
+  - Mentor atribuído (quando aplicável)
+  - Timestamps (criação, atribuição, conclusão)
 
 ## 🔒 Validações Implementadas
 
-- **Email**: Formato válido
-- **CPF**: Validação completa com dígitos verificadores
-- **Telefone**: Formato brasileiro com DDD
-- **Data**: Formato DD/MM/AAAA com validação de idade
+- **Título**: Mínimo 5 caracteres, máximo 200
+- **Área**: Mínimo 3 caracteres, máximo 100
+- **Descrição**: Mínimo 10 caracteres, máximo 2000
+- **Urgência**: Seleção entre opções predefinidas
 - **Campos obrigatórios**: Todos os campos são validados
 
 ## 🗄️ Banco de Dados
 
-### Tabela `participantes`
+### Tabela `solicitacoes_mentoria`
 
 ```sql
-CREATE TABLE participantes (
+CREATE TABLE solicitacoes_mentoria (
     id SERIAL PRIMARY KEY,
-    discord_user_id BIGINT UNIQUE NOT NULL,
+    discord_user_id BIGINT NOT NULL,
     discord_username VARCHAR(100) NOT NULL,
-    nome VARCHAR(100) NOT NULL,
-    sobrenome VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    data_nascimento VARCHAR(10) NOT NULL,
-    escolaridade escolaridadeenum NOT NULL,
-    modalidade modalidadeenum NOT NULL,
-    data_inscricao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    canal_privado_id BIGINT
+    titulo VARCHAR(200) NOT NULL,
+    descricao TEXT NOT NULL,
+    area_conhecimento VARCHAR(100) NOT NULL,
+    nivel_urgencia VARCHAR(20) NOT NULL,
+    status statussolicitacaoenum DEFAULT 'Pendente',
+    mentor_discord_id BIGINT,
+    mentor_username VARCHAR(100),
+    data_solicitacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_assumida TIMESTAMP,
+    data_conclusao TIMESTAMP
+);
+```
+
+### Enum `StatusSolicitacaoEnum`
+
+```sql
+CREATE TYPE statussolicitacaoenum AS ENUM (
+    'Pendente',
+    'Em Andamento', 
+    'Concluída',
+    'Cancelada'
 );
 ```
 
@@ -177,29 +195,35 @@ O bot precisa das seguintes permissões no Discord:
 
 ## 🚨 Tratamento de Erros
 
-- **Inscrição Duplicada**: Impede múltiplas inscrições do mesmo usuário
+- **Sessão Ativa**: Impede múltiplas solicitações simultâneas do mesmo usuário
 - **Validação de Dados**: Mensagens de erro específicas para cada campo
 - **Banco de Dados**: Tratamento de erros de conexão
 - **Cancelamento**: Usuários podem cancelar digitando "cancelar"
+- **Fallback de Canais**: Automaticamente usa DM se não conseguir criar canal privado
 
 ## 🔧 Personalização
 
 ### Modificar perguntas:
-Edite o array `questions` em `handlers/registration_form.py`
+Edite os métodos de processamento em `handlers/mentoria_handler.py`
 
 ### Adicionar validações:
-Implemente novos métodos `validate_*` na classe `RegistrationHandler`
+Implemente novos métodos `_process_*` na classe `MentoriaHandler`
 
 ### Customizar mensagens:
 Modifique os embeds nos arquivos de views e handlers
+
+### Configurar Mentores:
+Crie um papel chamado "Mentor" no servidor para permitir acesso ao comando `/solicitacoes`
 
 ## 📊 Monitoramento
 
 O bot inclui logs para:
 - Conexões com banco de dados
-- Inscrições realizadas
+- Solicitações de mentoria criadas
 - Erros de validação
 - Comandos executados
+- Atribuições de mentores
+- Status de solicitações
 
 ## 🤝 Contribuição
 
@@ -217,10 +241,24 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 
 Para dúvidas ou problemas:
 1. Verifique se todas as dependências estão instaladas
-2. Confirme se as variáveis de ambiente estão corretas
+2. Confirme se as variáveis de ambiente estão corretas no arquivo `.env`
 3. Verifique se o PostgreSQL está rodando
-4. Consulte os logs para identificar erros específicos
+4. Confirme se o canal #mentores existe no servidor
+5. Verifique se o papel "Mentor" foi criado para mentores
+6. Consulte os logs para identificar erros específicos
+
+## 🔧 Configurações Importantes do Discord
+
+### Canais necessários:
+- `#mentores` - Canal onde mentores recebem notificações
+- `#solicitar-mentoria` - Canal onde será postado o painel de solicitação (opcional)
+
+### Papéis necessários:
+- `Mentor` - Papel que permite acesso ao comando `/solicitacoes`
+
+### Categorias criadas automaticamente:
+- `Solicitações Mentoria` - Onde canais privados de solicitação são criados
 
 ---
 
-**NASA Space Apps Challenge 2025 - Uberlândia** 🚀
+**Sistema de Mentoria Discord** 🎓

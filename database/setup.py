@@ -55,7 +55,7 @@ class DatabaseSetup:
                 result = connection.execute(text("SELECT 1"))
                 return result.fetchone() is not None
         except Exception as e:
-            print(f"❌ Erro na conexão: {e}")
+            print(f"Erro na conexao: {e}")
             return False
 
     def create_enums(self):
@@ -90,42 +90,42 @@ class DatabaseSetup:
                     sql = f"CREATE TYPE {enum_def['name']} AS ENUM ('{values_str}')"
                     connection.execute(text(sql))
                     connection.commit()
-                    print(f"✅ Enum {enum_def['name']} criado")
+                    print(f"Enum {enum_def['name']} criado")
             except Exception as e:
                 if "already exists" in str(e):
-                    print(f"ℹ️ Enum {enum_def['name']} já existe")
+                    print(f"Enum {enum_def['name']} ja existe")
                 else:
-                    print(f"⚠️ Erro ao criar {enum_def['name']}: {e}")
+                    print(f"Erro ao criar {enum_def['name']}: {e}")
 
     def create_tables(self):
         """Cria todas as tabelas"""
         try:
             Base.metadata.create_all(bind=self.sync_engine)
-            print("✅ Tabelas criadas/atualizadas com sucesso")
+            print("Tabelas criadas/atualizadas com sucesso")
             return True
         except Exception as e:
-            print(f"❌ Erro ao criar tabelas: {e}")
+            print(f"Erro ao criar tabelas: {e}")
             return False
 
     def initialize_database(self):
         """Inicialização completa do banco"""
-        print("🚀 Inicializando banco de dados NASA Space Apps...")
+        print("Inicializando banco de dados de mentoria...")
         
         # Testar conexão
         if not self.test_connection():
-            print("❌ Falha na conexão com o banco de dados")
+            print("Falha na conexao com o banco de dados")
             return False
 
         # Criar ENUMs
-        print("📊 Criando tipos ENUM...")
+        print("Criando tipos ENUM...")
         self.create_enums()
 
         # Criar tabelas
-        print("🏗️ Criando tabelas...")
+        print("Criando tabelas...")
         if not self.create_tables():
             return False
 
-        print("✅ Banco de dados inicializado com sucesso!")
+        print("Banco de dados inicializado com sucesso!")
         return True
 
     async def get_session(self):

@@ -22,7 +22,7 @@ class DiscordLogHandler(logging.Handler):
                 import config
                 self.channel_id = config.LOG_CHANNEL_ID
             except:
-                self.channel_id = 1402387427103998012  # Fallback
+                self.channel_id = 1404498057239859371  # Fallback
         else:
             self.channel_id = channel_id
         self.channel = None

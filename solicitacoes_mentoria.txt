@@ -1,0 +1,30 @@
+RELATÓRIO DE SOLICITAÇÕES DE MENTORIA
+==================================================
+
+001. Teste
+     Solicitante: Ghabryel
+     Área: Machine Learning
+     Urgência: Alta
+     Status: Pendente
+     Data: 27/09/2025 17:55
+     Descrição: Me ajuda por favor
+----------------------------------------
+002. Teste
+     Solicitante: Ghabryel
+     Área: Teste 1234
+     Urgência: Média
+     Status: Pendente
+     Data: 27/09/2025 18:03
+     Descrição: Teste teste  123445
+----------------------------------------
+003. teste teste 1234
+     Solicitante: Ghabryel
+     Área: teste teste 1234
+     Urgência: Alta
+     Status: Em Andamento
+     Mentor: Ghabryel
+     Data: 27/09/2025 18:05
+     Descrição: teste teste 1234
+----------------------------------------
+
+Total: 3 solicitações

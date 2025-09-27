@@ -19,3 +19,118 @@ SyntaxError: expected 'except' or 'finally' block
 2025-08-07 19:35:04,118 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
 2025-08-07 19:48:31,686 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
 2025-08-14 07:39:30,308 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-08-21 12:32:53,939 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-08-21 12:34:50,110 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-08-21 12:34:50,302 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-08-21 12:34:50,302 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-08-21 12:34:50,303 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "c:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 42, in setup_hook
+    self.add_view(MentoriaRequestView())
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\client.py", line 3182, in add_view
+    raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-08-21 12:34:52,814 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-08-21 12:34:53,268 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 5 comando(s) slash
+2025-08-21 12:35:33,820 - nasa_spaceapps_bot - ERROR - error:203 - Erro em comando de prefixo: clear por 852694904680480818
+Traceback (most recent call last):
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\converter.py", line 1335, in _actual_conversion
+    return converter(argument)
+           ^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'amount:50'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\bot.py", line 1366, in invoke
+    await ctx.command.invoke(ctx)
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\core.py", line 1021, in invoke
+    await self.prepare(ctx)
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\core.py", line 938, in prepare
+    await self._parse_arguments(ctx)
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\core.py", line 845, in _parse_arguments
+    transformed = await self.transform(ctx, param, attachments)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\core.py", line 715, in transform
+    return await run_converters(ctx, converter, argument, param)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\converter.py", line 1444, in run_converters
+    return await _actual_conversion(ctx, converter, argument, param)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\ext\commands\converter.py", line 1344, in _actual_conversion
+    raise BadArgument(f'Converting to "{name}" failed for parameter "{param.name}".') from exc
+discord.ext.commands.errors.BadArgument: Converting to "int" failed for parameter "amount".
+2025-08-21 12:35:56,640 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 16 mensagens no canal 🌎┃welcome
+2025-08-21 12:36:26,216 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 10 mensagens no canal equipes
+2025-08-21 12:36:33,528 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 4 mensagens no canal equipes
+2025-08-21 12:36:39,420 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 0 mensagens no canal 🌎┃welcome
+2025-08-21 12:36:43,275 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 0 mensagens no canal 🌎┃welcome
+2025-08-21 12:38:51,830 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao limpar mensagens no canal 🎓┃solicitar-mentoria
+Traceback (most recent call last):
+  File "c:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 477, in clear_messages
+    await confirmation.delete()
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\message.py", line 1304, in delete
+    await self._state.http.delete_message(self.channel.id, self.id)
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\http.py", line 758, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
+2025-08-21 12:38:56,758 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 9 mensagens no canal 🎓┃solicitar-mentoria
+2025-08-21 12:46:30,053 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-27 14:51:12,182 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-27 14:52:31,996 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-27 14:52:32,230 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-27 14:52:32,231 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-27 14:52:32,231 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 42, in setup_hook
+    self.add_view(MentoriaRequestView())
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\client.py", line 3182, in add_view
+    raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-09-27 14:52:34,697 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-27 14:52:35,169 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 5 comando(s) slash
+2025-09-27 14:53:26,288 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 6 mensagens no canal equipes
+2025-09-27 14:55:06,751 - nasa_spaceapps_bot - WARNING - warning:199 - Canal 'mentores' não encontrado
+2025-09-27 14:55:06,751 - nasa_spaceapps_bot - INFO - info:195 - Nova solicitação de mentoria criada: Teste por Ghabryel
+2025-09-27 14:56:20,733 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-27 14:56:26,701 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-27 14:56:26,756 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-27 14:56:26,757 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-27 14:56:26,757 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 42, in setup_hook
+    self.add_view(MentoriaRequestView())
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\client.py", line 3182, in add_view
+    raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-09-27 14:56:29,229 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-27 14:56:29,544 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 5 comando(s) slash
+2025-09-27 15:02:44,229 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 10 mensagens no canal solicitações-de-mentoria
+2025-09-27 15:02:55,824 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 9 mensagens no canal solicitações-de-mentoria
+2025-09-27 15:03:55,697 - nasa_spaceapps_bot - WARNING - warning:199 - Canal 'mentores' não encontrado
+2025-09-27 15:03:55,697 - nasa_spaceapps_bot - INFO - info:195 - Nova solicitação de mentoria criada: Teste por Ghabryel
+2025-09-27 15:04:47,254 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-27 15:04:49,810 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-27 15:04:49,885 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-27 15:04:49,885 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-27 15:04:49,885 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 42, in setup_hook
+    self.add_view(MentoriaRequestView())
+  File "C:\Users\ghabr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\discord\client.py", line 3182, in add_view
+    raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-09-27 15:04:52,525 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-27 15:04:52,819 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 5 comando(s) slash
+2025-09-27 15:05:27,908 - nasa_spaceapps_bot - INFO - info:195 - Mentores notificados sobre solicitação 3
+2025-09-27 15:05:27,908 - nasa_spaceapps_bot - INFO - info:195 - Nova solicitação de mentoria criada: teste teste 1234 por Ghabryel
+2025-09-27 15:05:32,236 - nasa_spaceapps_bot - INFO - info:195 - Mentoria 3 assumida por Ghabryel
+2025-09-27 15:06:43,348 - nasa_spaceapps_bot - ERROR - error:203 - Erro em comando de prefixo: None por 852694904680480818
+discord.ext.commands.errors.CommandNotFound: Command "ajuda" is not found
+2025-09-27 15:07:04,354 - nasa_spaceapps_bot - ERROR - error:203 - Erro em comando de prefixo: None por 852694904680480818
+discord.ext.commands.errors.CommandNotFound: Command "status]" is not found
+2025-09-27 15:07:05,501 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 10 mensagens no canal comandos
+2025-09-27 15:07:09,258 - nasa_spaceapps_bot - ERROR - error:203 - Erro em comando de prefixo: None por 852694904680480818
+discord.ext.commands.errors.CommandNotFound: Command "status" is not found
+2025-09-27 15:08:37,591 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 2 mensagens no canal 🎓┃solicitar-mentoria
+2025-09-27 15:09:24,057 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...

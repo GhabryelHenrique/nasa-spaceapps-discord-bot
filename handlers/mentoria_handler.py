@@ -141,7 +141,7 @@ class MentoriaHandler:
                 return
             
             # Procurar canal de mentores
-            mentor_channel = discord.utils.get(guild.channels, name='mentores')
+            mentor_channel = discord.utils.get(guild.channels, id=1404498946482503906)  # ID do canal de mentores
             if not mentor_channel:
                 self.logger.warning("Canal 'mentores' não encontrado")
                 return

@@ -451,6 +451,68 @@ async def export_solicitacoes_slash(interaction: discord.Interaction):
     except Exception as e:
         await interaction.response.send_message(f"Erro ao exportar dados: {str(e)}")
 
+# Comando para limpar mensagens do chat
+@bot.command(name='clear')
+@commands.has_permissions(manage_messages=True)
+async def clear_messages(ctx, amount: int = 10):
+    """Comando para limpar mensagens do chat"""
+    try:
+        if amount <= 0:
+            await ctx.send("❌ Quantidade deve ser maior que 0.", delete_after=5)
+            return
+        
+        if amount > 100:
+            await ctx.send("❌ Máximo de 100 mensagens por vez.", delete_after=5)
+            return
+        
+        # Deletar a mensagem do comando primeiro
+        await ctx.message.delete()
+        
+        # Deletar as mensagens
+        deleted = await ctx.channel.purge(limit=amount)
+        
+        # Enviar confirmação que será deletada após 5 segundos
+        confirmation = await ctx.send(f"🗑️ **{len(deleted)}** mensagens foram removidas.")
+        await asyncio.sleep(3)
+        await confirmation.delete()
+        
+        bot.logger.info(f"Usuário {ctx.author.id} ({ctx.author.name}) limpou {len(deleted)} mensagens no canal {ctx.channel.name}")
+        
+    except discord.Forbidden:
+        await ctx.send("❌ Não tenho permissão para deletar mensagens neste canal.", delete_after=5)
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao limpar mensagens: {str(e)}", delete_after=5)
+        bot.logger.error(f"Erro ao limpar mensagens no canal {ctx.channel.name}", exc_info=e)
+
+# Comando slash para limpar mensagens
+@bot.tree.command(name='clear', description='Limpar mensagens do chat')
+@discord.app_commands.describe(amount="Número de mensagens para limpar (padrão: 10, máximo: 100)")
+@discord.app_commands.default_permissions(manage_messages=True)
+async def clear_messages_slash(interaction: discord.Interaction, amount: int = 10):
+    """Comando slash para limpar mensagens do chat"""
+    try:
+        if amount <= 0:
+            await interaction.response.send_message("❌ Quantidade deve ser maior que 0.", ephemeral=True)
+            return
+        
+        if amount > 100:
+            await interaction.response.send_message("❌ Máximo de 100 mensagens por vez.", ephemeral=True)
+            return
+        
+        # Deletar as mensagens
+        deleted = await interaction.channel.purge(limit=amount)
+        
+        # Responder com confirmação
+        await interaction.response.send_message(f"🗑️ **{len(deleted)}** mensagens foram removidas.", ephemeral=True)
+        
+        bot.logger.info(f"Usuário {interaction.user.id} ({interaction.user.name}) limpou {len(deleted)} mensagens no canal {interaction.channel.name}")
+        
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ Não tenho permissão para deletar mensagens neste canal.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"❌ Erro ao limpar mensagens: {str(e)}", ephemeral=True)
+        bot.logger.error(f"Erro ao limpar mensagens no canal {interaction.channel.name}", exc_info=e)
+
 # Comando para listar solicitações pendentes (apenas mentores)
 @bot.tree.command(name='solicitacoes', description='Ver solicitações de mentoria pendentes')
 async def list_solicitacoes(interaction: discord.Interaction):
@@ -527,6 +589,7 @@ async def list_solicitacoes(interaction: discord.Interaction):
 @setup_mentoria.error
 @mentoria_stats.error
 @export_solicitacoes.error
+@clear_messages.error
 async def command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("Você não tem permissão para usar este comando.")
@@ -536,6 +599,7 @@ async def command_error(ctx, error):
 @mentoria_stats_slash.error
 @export_solicitacoes_slash.error
 @list_solicitacoes.error
+@clear_messages_slash.error
 async def slash_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     if isinstance(error, discord.app_commands.MissingPermissions):
         if not interaction.response.is_done():

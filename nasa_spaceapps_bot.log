@@ -134,3 +134,48 @@ discord.ext.commands.errors.CommandNotFound: Command "status]" is not found
 discord.ext.commands.errors.CommandNotFound: Command "status" is not found
 2025-09-27 15:08:37,591 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 2 mensagens no canal 🎓┃solicitar-mentoria
 2025-09-27 15:09:24,057 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-28 10:17:03,208 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-28 10:17:03,271 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-28 10:17:03,272 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-28 10:17:03,272 - nasa_spaceapps_bot - ERROR - error:203 - Erro crítico durante inicialização do bot
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\bot.py", line 46, in setup_hook
+    self.add_view(MentoriaRequestView())
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\venv\Lib\site-packages\discord\client.py", line 3182, in add_view
+    raise ValueError('View is not persistent. Items need to have a custom_id set and View must have no timeout')
+ValueError: View is not persistent. Items need to have a custom_id set and View must have no timeout
+2025-09-28 10:17:05,749 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-28 10:18:49,826 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-28 10:18:52,929 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-28 10:18:52,981 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-28 10:18:52,981 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-28 10:18:52,981 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-09-28 10:18:52,981 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-09-28 10:18:55,503 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-28 10:18:55,863 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-09-28 10:18:56,343 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
+2025-09-28 10:19:55,543 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Time foda' criada por 852694904680480818 (_ghabryel)
+2025-09-28 10:20:05,929 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao deletar equipe Time foda
+Traceback (most recent call last):
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\handlers\team_handler.py", line 684, in delete_team
+    await interaction.response.edit_message(embed=embed, view=None)
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\venv\Lib\site-packages\discord\interactions.py", line 1154, in edit_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ghabr\OneDrive\Documentos\python\disc\venv\Lib\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
+2025-09-28 10:25:27,886 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-28 10:35:49,962 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-28 10:35:50,016 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-28 10:35:50,017 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-28 10:35:50,017 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-09-28 10:35:50,017 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-09-28 10:35:52,650 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-28 10:35:53,219 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-09-28 10:35:56,777 - nasa_spaceapps_bot - INFO - info:195 - Canal de equipes limpo: 7 mensagens removidas
+2025-09-28 10:35:57,037 - nasa_spaceapps_bot - INFO - info:195 - Canal de mentoria limpo: 0 mensagens removidas
+2025-09-28 10:35:59,271 - nasa_spaceapps_bot - INFO - info:195 - Painel de mentoria enviado para o canal 1404479492814016703
+2025-09-28 10:35:59,525 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
+2025-09-28 10:36:00,020 - nasa_spaceapps_bot - INFO - info:195 - Anúncio de atualizações enviado para o canal 1421850940767473715
+2025-09-28 10:37:45,112 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...

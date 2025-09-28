@@ -45,7 +45,10 @@ Agora você tem acesso aos canais exclusivos da equipe. Boa sorte no NASA Space 
                 self.accept_invitation.disabled = True
                 self.decline_invitation.disabled = True
                 
-                await interaction.response.edit_message(embed=embed, view=self)
+                try:
+                    await interaction.response.edit_message(embed=embed, view=self)
+                except discord.NotFound:
+                    await interaction.followup.send(embed=embed, ephemeral=True)
                 
                 # Notificar o líder da equipe
                 try:
@@ -90,8 +93,11 @@ Agora você tem acesso aos canais exclusivos da equipe. Boa sorte no NASA Space 
             # Desabilitar botões
             self.accept_invitation.disabled = True
             self.decline_invitation.disabled = True
-            
-            await interaction.response.edit_message(embed=embed, view=self)
+
+            try:
+                await interaction.response.edit_message(embed=embed, view=self)
+            except discord.NotFound:
+                await interaction.followup.send(embed=embed, ephemeral=True)
             
             # Notificar o líder da equipe
             try:

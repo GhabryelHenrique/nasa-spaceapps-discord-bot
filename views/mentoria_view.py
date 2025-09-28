@@ -7,7 +7,8 @@ class MentoriaRequestView(discord.ui.View):
     @discord.ui.button(
         label='Solicitar Ajuda',
         style=discord.ButtonStyle.primary,
-        emoji='🆘'
+        emoji='🆘',
+        custom_id='solicitar_mentoria_button'
     )
     async def solicitar_ajuda(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Inicia o processo de solicitação de mentoria"""

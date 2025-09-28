@@ -344,7 +344,10 @@ class MentorResponseView(discord.ui.View):
             # Desabilitar o botão
             button.disabled = True
             button.label = "Já Assumida"
-            await interaction.response.edit_message(view=self)
+            try:
+                await interaction.response.edit_message(view=self)
+            except discord.NotFound:
+                pass  # Se a mensagem não existir mais, ignora
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
             await interaction.response.send_message(f"❌ {message}", ephemeral=True)

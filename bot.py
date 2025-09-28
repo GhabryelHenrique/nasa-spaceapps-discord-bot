@@ -4,7 +4,10 @@ import asyncio
 import config
 from database.db import create_tables, DatabaseManager
 from views.mentoria_view import MentoriaRequestView
+from views.team_view import TeamRequestView
 from handlers.mentoria_handler import MentoriaHandler
+from handlers.team_handler import TeamHandler
+from handlers.voice_handler import VoiceHandler
 from utils.logger import get_logger, set_bot_instance
 
 # Configurações do bot
@@ -16,11 +19,13 @@ intents.members = True
 class MentoriaBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix='!',
+            command_prefix='n!',
             intents=intents,
             description="Bot para solicitações de mentoria"
         )
         self.mentoria_handler = None
+        self.team_handler = None
+        self.voice_handler = None
         self.logger = get_logger()
 
     async def setup_hook(self):
@@ -36,10 +41,13 @@ class MentoriaBot(commands.Bot):
             
             # Inicializar handlers
             self.mentoria_handler = MentoriaHandler(self)
+            self.team_handler = TeamHandler(self)
+            self.voice_handler = VoiceHandler(self)
             self.logger.info("Handlers inicializados")
-            
+
             # Adicionar views persistentes
             self.add_view(MentoriaRequestView())
+            self.add_view(TeamRequestView())
             self.logger.info("Views persistentes adicionadas")
             
             # Adicionar views de convites (serão recriadas dinamicamente quando necessário)
@@ -53,16 +61,27 @@ class MentoriaBot(commands.Bot):
     async def on_ready(self):
         """Evento executado quando o bot fica online"""
         self.logger.info(f'Bot conectado como {self.user.name} (ID: {self.user.id})')
-        
+
+        # Configurar atividade do bot
+        activity = discord.Activity(type=discord.ActivityType.watching, name="mentores e estudantes | n!ajuda")
+        await self.change_presence(activity=activity, status=discord.Status.online)
+
         # Configurar logger para Discord (agora que o bot está online)
         set_bot_instance(self)
-        
+
         # Sincronizar comandos slash
         try:
             synced = await self.tree.sync()
             self.logger.info(f'Sincronizados {len(synced)} comando(s) slash')
         except Exception as e:
             self.logger.error('Erro ao sincronizar comandos slash', exc_info=e)
+
+        # Limpar canais e enviar painéis
+        await self.setup_channels_and_panels()
+
+        # Iniciar limpeza periódica de canais de voz
+        if self.voice_handler:
+            self.loop.create_task(self.periodic_voice_cleanup())
 
     async def on_message(self, message):
         """Processa mensagens"""
@@ -77,14 +96,33 @@ class MentoriaBot(commands.Bot):
         if self.mentoria_handler:
             print(f"Processando resposta do formulário de mentoria para usuário {message.author.id}")
             await self.mentoria_handler.process_mentoria_answer(message)
-        
+
+        # Processar respostas do formulário de criação de equipes
+        if self.team_handler:
+            await self.team_handler.process_team_creation(message)
+
         # Processar comandos
         await self.process_commands(message)
 
+    async def on_voice_state_update(self, member, before, after):
+        """Processa mudanças de estado de voz"""
+        # Processar sistema de canais temporários
+        if self.voice_handler:
+            await self.voice_handler.handle_voice_state_update(member, before, after)
+
     async def on_command_error(self, ctx, error):
         """Trata erros de comandos de prefixo"""
+        if isinstance(error, commands.CommandNotFound):
+            embed = discord.Embed(
+                title="❌ Comando não encontrado",
+                description=f"O comando `{ctx.invoked_with}` não existe.\n\nUse `n!ajuda` para ver todos os comandos disponíveis.",
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=embed, delete_after=10)
+            return
+
         self.logger.error(f'Erro em comando de prefixo: {ctx.command} por {ctx.author.id}', exc_info=error)
-        
+
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("Você não tem permissão para usar este comando.")
         else:
@@ -114,8 +152,621 @@ class MentoriaBot(commands.Bot):
         await DatabaseManager.close_engine()
         await super().close()
 
+
+    async def periodic_voice_cleanup(self):
+        """Limpeza periódica de canais de voz temporários"""
+        while not self.is_closed():
+            try:
+                await asyncio.sleep(300)  # A cada 5 minutos
+                if self.voice_handler:
+                    await self.voice_handler.cleanup_abandoned_channels()
+            except Exception as e:
+                self.logger.error("Erro na limpeza periódica de canais de voz", exc_info=e)
+                await asyncio.sleep(60)  # Aguardar 1 minuto antes de tentar novamente
+
+    async def setup_channels_and_panels(self):
+        """Limpa canais e envia painéis no startup"""
+        try:
+            # IDs dos canais
+            team_channel_id = 1421842573760135268      # Canal de criação de equipes
+            mentoria_channel_id = 1404479492814016703  # Canal de mentoria
+            announcements_channel_id = 1421850940767473715  # Canal de anúncios
+
+            # Buscar canais
+            team_channel = self.get_channel(team_channel_id)
+            mentoria_channel = self.get_channel(mentoria_channel_id)
+            announcements_channel = self.get_channel(announcements_channel_id)
+
+            channels_cleaned = 0
+
+            # Limpar canal de equipes
+            if team_channel:
+                try:
+                    deleted_messages = await team_channel.purge(limit=None)
+                    channels_cleaned += 1
+                    self.logger.info(f"Canal de equipes limpo: {len(deleted_messages)} mensagens removidas")
+                except Exception as e:
+                    self.logger.error(f"Erro ao limpar canal de equipes", exc_info=e)
+
+            # Limpar canal de mentoria
+            if mentoria_channel:
+                try:
+                    deleted_messages = await mentoria_channel.purge(limit=None)
+                    channels_cleaned += 1
+                    self.logger.info(f"Canal de mentoria limpo: {len(deleted_messages)} mensagens removidas")
+                except Exception as e:
+                    self.logger.error(f"Erro ao limpar canal de mentoria", exc_info=e)
+
+            # Aguardar um pouco para evitar rate limits
+            await asyncio.sleep(2)
+
+            # Enviar painel de mentoria
+            if mentoria_channel:
+                await self.send_mentoria_panel(mentoria_channel)
+
+            # Enviar painel de equipes
+            if team_channel:
+                await self.send_team_panel_to_channel(team_channel)
+
+            # Enviar notificação de novidades
+            if announcements_channel:
+                await self.send_updates_announcement(announcements_channel, channels_cleaned)
+
+        except Exception as e:
+            self.logger.error("Erro no setup de canais e painéis", exc_info=e)
+
+    async def send_mentoria_panel(self, channel):
+        """Envia o painel de mentoria para um canal específico"""
+        try:
+            embed = discord.Embed(
+                title="🎓 Sistema de Mentoria",
+                description="""**Bem-vindo ao sistema de solicitação de mentoria!**
+
+Aqui você pode solicitar ajuda de mentores experientes em diversas áreas do conhecimento.
+
+**🎯 Como funciona:**
+• Clique no botão abaixo para solicitar ajuda
+• Preencha o formulário com sua dúvida
+• Os mentores serão notificados
+• Um mentor assumirá sua solicitação
+• Você receberá ajuda personalizada!
+
+**📚 Áreas disponíveis:**
+• Programação (Python, JavaScript, Java, C++, etc.)
+• Desenvolvimento Web e Mobile
+• Ciência de Dados e Machine Learning
+• Design e UX/UI
+• DevOps e Cloud Computing
+• E muito mais!
+
+Clique no botão abaixo para solicitar mentoria!""",
+                color=discord.Color.blue()
+            )
+
+            embed.add_field(
+                name="🎯 Para quem é?",
+                value="Estudantes, profissionais iniciantes, e qualquer pessoa que precise de orientação técnica.",
+                inline=False
+            )
+
+            embed.add_field(
+                name="⚡ Resposta rápida",
+                value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
+                inline=False
+            )
+
+            embed.set_footer(text="Sistema de Mentoria | Solicite ajuda quando precisar!")
+            embed.set_thumbnail(url=channel.guild.icon.url if channel.guild.icon else None)
+
+            view = MentoriaRequestView()
+            await channel.send(embed=embed, view=view)
+
+            self.logger.info(f"Painel de mentoria enviado para o canal {channel.id}")
+
+        except Exception as e:
+            self.logger.error("Erro ao enviar painel de mentoria", exc_info=e)
+
+    async def send_team_panel_to_channel(self, channel):
+        """Envia o painel de equipes para um canal específico"""
+        try:
+            # Criar embed do painel
+            embed = discord.Embed(
+                title="🏆 Sistema de Equipes",
+                description="""**Bem-vindo ao sistema de criação de equipes!**
+
+Aqui você pode criar sua própria equipe e liderar projetos incríveis com outros membros da comunidade.
+
+**🎯 Como funciona:**
+• Clique no botão abaixo para criar sua equipe
+• Preencha um formulário simples de 3 passos
+• Receba canais exclusivos e role da equipe
+• Ganhe um canal privado de liderança
+• Adicione até 5 membros à sua equipe
+
+**📋 O que você ganha:**
+• 💬 Canal de texto exclusivo da equipe
+• 🔊 Canal de voz para reuniões
+• 👑 Canal privado de liderança
+• 🏷️ Role colorida da equipe
+• 🎮 Controle total sobre membros
+
+**⚡ Recursos do líder:**
+• Adicionar/remover membros (máximo 6 total)
+• Editar informações da equipe
+• Gerenciar a equipe completamente
+• Canal privado só para você
+
+**🎨 Categorias disponíveis:**
+• 💻 Programação & Desenvolvimento
+• 🎨 Design & Criatividade
+• 📊 Dados & Analytics
+• 🎮 Jogos & Entretenimento
+• 🔬 Ciência & Pesquisa
+• 💼 Negócios & Empreendedorismo
+• 🎓 Educação & Ensino
+• 🌐 Geral & Outros
+
+Clique no botão abaixo para criar sua equipe!""",
+                color=discord.Color.gold()
+            )
+
+            embed.add_field(
+                name="👑 Para quem é?",
+                value="Qualquer membro pode criar e liderar uma equipe. Ideal para projetos, estudos em grupo, ou iniciativas colaborativas.",
+                inline=False
+            )
+
+            embed.add_field(
+                name="📊 Limite",
+                value="• Cada usuário pode liderar apenas **1 equipe**\n• Cada equipe pode ter no máximo **6 membros** (incluindo o líder)\n• Processo 100% automatizado",
+                inline=False
+            )
+
+            embed.set_footer(text="Sistema de Equipes | Crie a sua agora!")
+            embed.set_thumbnail(url=channel.guild.icon.url if channel.guild.icon else None)
+
+            view = TeamRequestView()
+            await channel.send(embed=embed, view=view)
+
+            self.logger.info(f"Painel de equipes enviado para o canal {channel.id}")
+
+        except Exception as e:
+            self.logger.error("Erro ao enviar painel de equipes", exc_info=e)
+
+    async def send_updates_announcement(self, channel, channels_cleaned):
+        """Envia anúncio de atualizações do bot"""
+        try:
+            embed = discord.Embed(
+                title="🤖 Bot Atualizado e Online!",
+                description=f"""@everyone **O bot foi atualizado e está online novamente!**
+
+**🧹 Limpeza Automática:**
+• {channels_cleaned} canal(is) foi(ram) limpo(s) e reorganizado(s)
+• Painéis atualizados e funcionando perfeitamente
+
+**🆕 NOVIDADE: Sistema de Equipes**
+Agora você pode criar e liderar sua própria equipe!
+
+**🎯 Como funciona o Sistema de Equipes:**
+• Clique no botão "Criar Equipe" no canal correspondente
+• Preencha um formulário rápido de 3 passos
+• Receba automaticamente:
+  - 💬 Canal de texto exclusivo
+  - 🔊 Canal de voz privado
+  - 👑 Canal de liderança (só para você)
+  - 🏷️ Role colorida da equipe
+
+**👑 Como Líder você pode:**
+• Adicionar até 5 membros (6 total incluindo você)
+• Remover membros da equipe
+• Editar informações da equipe
+• Gerenciar permissões e configurações
+• Ter controle total sobre os canais
+
+**🎮 Outras Funcionalidades:**
+• Sistema de mentoria aprimorado
+• Canais de voz temporários automáticos
+• Comandos de administração melhorados
+
+**🔧 Sistemas Ativos:**
+✅ Sistema de Mentoria
+✅ Sistema de Equipes (NOVO!)
+✅ Canais de Voz Temporários
+✅ Comandos Administrativos
+✅ Logging Avançado""",
+                color=discord.Color.green()
+            )
+
+            embed.add_field(
+                name="📍 Onde Encontrar",
+                value="""
+                🎓 **Mentoria:** <#1404479492814016703>
+                🏆 **Equipes:** <#1421842573760135268>
+                🔊 **Canais Temporários:** Entre no canal trigger de voz
+                """,
+                inline=False
+            )
+
+            embed.add_field(
+                name="💡 Dicas",
+                value="""
+                • Use `n!ajuda` para ver todos os comandos
+                • Cada usuário pode liderar apenas 1 equipe
+                • Equipes podem ter até 6 membros
+                • Canais de voz temporários são criados automaticamente
+                • O líder tem controle total sobre sua equipe
+                """,
+                inline=False
+            )
+
+            embed.set_footer(text=f"Bot Online • Sistema atualizado em {discord.utils.utcnow().strftime('%d/%m/%Y às %H:%M')} UTC")
+            embed.set_thumbnail(url=channel.guild.icon.url if channel.guild.icon else None)
+
+            await channel.send(embed=embed)
+
+            self.logger.info(f"Anúncio de atualizações enviado para o canal {channel.id}")
+
+        except Exception as e:
+            self.logger.error("Erro ao enviar anúncio de atualizações", exc_info=e)
+
 # Instância do bot
 bot = MentoriaBot()
+
+@bot.command(name='ajuda', aliases=['comandos'])
+async def help_command(ctx):
+    """Mostra todos os comandos disponíveis"""
+    embed = discord.Embed(
+        title="🤖 Comandos do Bot de Mentoria",
+        description="Aqui estão todos os comandos disponíveis:",
+        color=discord.Color.blue()
+    )
+
+    # Comandos para usuários
+    embed.add_field(
+        name="👥 Comandos para Usuários",
+        value="""
+        `n!ajuda` - Mostra esta mensagem de ajuda
+        `n!info_equipe` - Ver informações sobre uma equipe
+        `n!listar_equipes` - Listar todas as equipes do servidor
+        """,
+        inline=False
+    )
+
+    # Comandos para mentores
+    embed.add_field(
+        name="🎓 Comandos para Mentores",
+        value="""
+        `/solicitacoes` - Ver solicitações pendentes (apenas mentores)
+        """,
+        inline=False
+    )
+
+    # Comandos administrativos
+    embed.add_field(
+        name="⚙️ Comandos Administrativos",
+        value="""
+        `n!setup` ou `/setup` - Configurar painel de mentoria
+        `n!stats` ou `/stats` - Ver estatísticas de mentoria
+        `n!export` ou `/export` - Exportar relatório de solicitações
+        `n!clear` ou `/clear` - Limpar mensagens do chat
+        `n!setup_equipes` - Configurar painel de equipes
+        `n!canais_temp` - Listar canais de voz temporários
+        `n!limpar_canais` - Forçar limpeza de canais vazios
+        `n!remover_canal_usuario` - Remover canais de um usuário
+        """,
+        inline=False
+    )
+
+    # Comandos slash
+    embed.add_field(
+        name="⚡ Comandos Slash",
+        value="""
+        Você também pode usar comandos slash digitando `/` e escolhendo o comando:
+        • `/setup` - Configurar painel
+        • `/stats` - Ver estatísticas
+        • `/export` - Exportar dados
+        • `/clear` - Limpar mensagens
+        • `/solicitacoes` - Ver solicitações (mentores)
+        • `/ajuda` - Esta mensagem de ajuda
+        """,
+        inline=False
+    )
+
+    embed.add_field(
+        name="🎯 Como Solicitar Mentoria",
+        value="Use o botão **'Solicitar Ajuda'** no painel de mentoria para enviar uma solicitação.",
+        inline=False
+    )
+
+    embed.set_footer(text="Bot de Mentoria | Use n! como prefixo para comandos")
+
+    await ctx.send(embed=embed)
+
+@bot.command(name='setup_equipes', aliases=['setup_teams'])
+@commands.has_permissions(administrator=True)
+async def setup_equipes(ctx):
+    """Comando para configurar o painel de equipes"""
+    await bot.send_team_panel()
+    await ctx.send("✅ Painel de equipes configurado!")
+
+@bot.command(name='info_equipe', aliases=['equipe_info'])
+async def info_equipe(ctx, *, nome_equipe: str = None):
+    """Mostra informações sobre uma equipe"""
+    try:
+        guild = ctx.guild
+
+        # Se não especificou a equipe, tentar detectar pelo canal atual
+        if not nome_equipe:
+            if ctx.channel.category and ctx.channel.category.name == "🏆 EQUIPES":
+                channel_name = ctx.channel.name.replace("💬│", "").replace("🔊│", "")
+                team_role = None
+                for role in guild.roles:
+                    if role.name.startswith("Equipe "):
+                        team_name_clean = ''.join(c for c in role.name.replace("Equipe ", "").lower() if c.isalnum() or c in ['-', '_']).replace(' ', '-')
+                        if team_name_clean == channel_name:
+                            team_role = role
+                            nome_equipe = role.name.replace("Equipe ", "")
+                            break
+            else:
+                await ctx.send("❌ Especifique o nome da equipe ou use este comando em um canal de equipe!")
+                return
+        else:
+            team_role = discord.utils.get(guild.roles, name=f"Equipe {nome_equipe}")
+
+        if not team_role:
+            await ctx.send(f"❌ Equipe '{nome_equipe}' não encontrada!")
+            return
+
+        # Buscar role de líder
+        leader_role = discord.utils.get(guild.roles, name=f"Líder {nome_equipe}")
+        leader = None
+        if leader_role:
+            leader_members = [member for member in guild.members if leader_role in member.roles]
+            if leader_members:
+                leader = leader_members[0]
+
+        # Buscar canais da equipe
+        category = discord.utils.get(guild.categories, name="🏆 EQUIPES")
+        text_channel = None
+        voice_channel = None
+
+        if category:
+            nome_limpo = ''.join(c for c in nome_equipe.lower() if c.isalnum() or c in ['-', '_']).replace(' ', '-')
+            text_channel = discord.utils.get(category.text_channels, name=f"💬│{nome_limpo}")
+            voice_channel = discord.utils.get(category.voice_channels, name=f"🔊│{nome_limpo}")
+
+        # Listar membros
+        members = [member for member in guild.members if team_role in member.roles]
+
+        embed = discord.Embed(
+            title=f"📋 Informações da Equipe {nome_equipe}",
+            color=team_role.color
+        )
+
+        embed.add_field(
+            name="🏷️ Role",
+            value=team_role.mention,
+            inline=True
+        )
+
+        embed.add_field(
+            name="👥 Membros",
+            value=f"{len(members)}/6",
+            inline=True
+        )
+
+        if leader:
+            embed.add_field(
+                name="👑 Líder",
+                value=leader.mention,
+                inline=True
+            )
+
+        if text_channel:
+            embed.add_field(
+                name="💬 Canal de Texto",
+                value=text_channel.mention,
+                inline=True
+            )
+
+        if voice_channel:
+            embed.add_field(
+                name="🔊 Canal de Voz",
+                value=voice_channel.mention,
+                inline=True
+            )
+
+        # Listar membros
+        if members:
+            members_list = []
+            for member in members:
+                if leader_role and leader_role in member.roles:
+                    members_list.append(f"👑 {member.display_name} (Líder)")
+                else:
+                    status_emoji = "🟢" if member.status == discord.Status.online else "🟠" if member.status == discord.Status.idle else "🔴" if member.status == discord.Status.dnd else "⚫"
+                    members_list.append(f"{status_emoji} {member.display_name}")
+
+            embed.add_field(
+                name="👥 Lista de Membros",
+                value="\n".join(members_list),
+                inline=False
+            )
+
+        embed.set_footer(text=f"Criada em: {team_role.created_at.strftime('%d/%m/%Y às %H:%M')}")
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao buscar informações da equipe: {str(e)}")
+
+@bot.command(name='listar_equipes', aliases=['list_equipes'])
+async def listar_equipes(ctx):
+    """Lista todas as equipes existentes no servidor"""
+    try:
+        guild = ctx.guild
+        team_roles = [role for role in guild.roles if role.name.startswith("Equipe ")]
+
+        if not team_roles:
+            embed = discord.Embed(
+                title="📭 Nenhuma Equipe Encontrada",
+                description="Não há equipes criadas neste servidor.",
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        embed = discord.Embed(
+            title="🏆 Equipes do Servidor",
+            description=f"Total de {len(team_roles)} equipe(s) encontrada(s):",
+            color=discord.Color.blue()
+        )
+
+        teams_info = []
+        for role in team_roles:
+            team_name = role.name.replace("Equipe ", "")
+            member_count = len([member for member in guild.members if role in member.roles])
+
+            # Buscar líder
+            leader_role = discord.utils.get(guild.roles, name=f"Líder {team_name}")
+            leader_name = "Sem líder"
+            if leader_role:
+                leader_members = [m for m in guild.members if leader_role in m.roles]
+                if leader_members:
+                    leader_name = leader_members[0].display_name
+
+            teams_info.append(f"🏷️ **{team_name}** - {member_count}/6 membros - Líder: {leader_name}")
+
+        # Dividir em grupos de 8 para não exceder limite do embed
+        for i in range(0, len(teams_info), 8):
+            chunk = teams_info[i:i+8]
+            embed.add_field(
+                name=f"Equipes {i+1}-{min(i+8, len(teams_info))}",
+                value="\n".join(chunk),
+                inline=False
+            )
+
+        embed.set_footer(text="Use n!info_equipe <nome> para mais detalhes sobre uma equipe específica")
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao listar equipes: {str(e)}")
+
+@bot.command(name='canais_temp', aliases=['temp_channels'])
+@commands.has_permissions(administrator=True)
+async def listar_canais_temp(ctx):
+    """Lista todos os canais de voz temporários ativos"""
+    try:
+        if not bot.voice_handler:
+            await ctx.send("❌ Sistema de canais temporários não está ativo.")
+            return
+
+        channels_info = bot.voice_handler.get_temp_channels_info()
+
+        if not channels_info:
+            embed = discord.Embed(
+                title="📭 Nenhum Canal Temporário",
+                description="Não há canais de voz temporários ativos no momento.",
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        embed = discord.Embed(
+            title="🔊 Canais de Voz Temporários",
+            description=f"Total de {len(channels_info)} canal(is) temporário(s) ativo(s):",
+            color=discord.Color.blue()
+        )
+
+        for i, info in enumerate(channels_info, 1):
+            channel = info['channel']
+            creator = info['creator']
+            member_count = info['member_count']
+            members = info['members']
+
+            members_text = ", ".join(members) if members else "Vazio"
+            if len(members_text) > 100:
+                members_text = members_text[:100] + "..."
+
+            embed.add_field(
+                name=f"{i}. {channel.name}",
+                value=f"""
+                **Criador:** {creator}
+                **Membros:** {member_count}
+                **Usuários:** {members_text}
+                **ID:** {channel.id}
+                """,
+                inline=False
+            )
+
+        embed.set_footer(text="Use n!limpar_canais para remover canais vazios")
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao listar canais temporários: {str(e)}")
+
+@bot.command(name='limpar_canais', aliases=['cleanup_voice'])
+@commands.has_permissions(administrator=True)
+async def limpar_canais_temp(ctx):
+    """Força a limpeza de canais temporários vazios"""
+    try:
+        if not bot.voice_handler:
+            await ctx.send("❌ Sistema de canais temporários não está ativo.")
+            return
+
+        # Executar limpeza
+        channels_before = len(bot.voice_handler.temp_channels)
+        await bot.voice_handler.cleanup_abandoned_channels()
+        channels_after = len(bot.voice_handler.temp_channels)
+
+        cleaned = channels_before - channels_after
+
+        embed = discord.Embed(
+            title="🧹 Limpeza de Canais Concluída",
+            description=f"""
+            **Canais antes da limpeza:** {channels_before}
+            **Canais após limpeza:** {channels_after}
+            **Canais removidos:** {cleaned}
+            """,
+            color=discord.Color.green()
+        )
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao limpar canais temporários: {str(e)}")
+
+@bot.command(name='remover_canal_usuario', aliases=['remove_user_channels'])
+@commands.has_permissions(administrator=True)
+async def remover_canais_usuario(ctx, user: discord.Member):
+    """Remove todos os canais temporários de um usuário específico"""
+    try:
+        if not bot.voice_handler:
+            await ctx.send("❌ Sistema de canais temporários não está ativo.")
+            return
+
+        # Contar canais do usuário antes da remoção
+        user_channels = 0
+        for channel_id, creator_id in bot.voice_handler.channel_creators.items():
+            if creator_id == user.id:
+                user_channels += 1
+
+        if user_channels == 0:
+            await ctx.send(f"❌ {user.mention} não possui canais temporários ativos.")
+            return
+
+        # Remover canais do usuário
+        await bot.voice_handler.force_cleanup_user_channels(user.id)
+
+        embed = discord.Embed(
+            title="🗑️ Canais Removidos",
+            description=f"Removidos {user_channels} canal(is) temporário(s) de {user.mention}.",
+            color=discord.Color.red()
+        )
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao remover canais do usuário: {str(e)}")
 
 @bot.command(name='setup')
 @commands.has_permissions(administrator=True)
@@ -583,9 +1234,81 @@ async def list_solicitacoes(interaction: discord.Interaction):
         )
         bot.logger.error(f"Erro ao listar solicitações", exc_info=e)
 
+# Comando slash para ajuda
+@bot.tree.command(name='ajuda', description='Mostrar todos os comandos disponíveis')
+async def help_command_slash(interaction: discord.Interaction):
+    """Comando slash para mostrar ajuda"""
+    embed = discord.Embed(
+        title="🤖 Comandos do Bot de Mentoria",
+        description="Aqui estão todos os comandos disponíveis:",
+        color=discord.Color.blue()
+    )
+
+    # Comandos para usuários
+    embed.add_field(
+        name="👥 Comandos para Usuários",
+        value="""
+        `n!ajuda` ou `/ajuda` - Mostra esta mensagem de ajuda
+        """,
+        inline=False
+    )
+
+    # Comandos para mentores
+    embed.add_field(
+        name="🎓 Comandos para Mentores",
+        value="""
+        `/solicitacoes` - Ver solicitações pendentes (apenas mentores)
+        """,
+        inline=False
+    )
+
+    # Comandos administrativos
+    embed.add_field(
+        name="⚙️ Comandos Administrativos",
+        value="""
+        `n!setup` ou `/setup` - Configurar painel de mentoria
+        `n!stats` ou `/stats` - Ver estatísticas de mentoria
+        `n!export` ou `/export` - Exportar relatório de solicitações
+        `n!clear` ou `/clear` - Limpar mensagens do chat
+        """,
+        inline=False
+    )
+
+    # Comandos slash
+    embed.add_field(
+        name="⚡ Comandos Slash",
+        value="""
+        Você também pode usar comandos slash digitando `/` e escolhendo o comando:
+        • `/setup` - Configurar painel
+        • `/stats` - Ver estatísticas
+        • `/export` - Exportar dados
+        • `/clear` - Limpar mensagens
+        • `/solicitacoes` - Ver solicitações (mentores)
+        • `/ajuda` - Esta mensagem de ajuda
+        """,
+        inline=False
+    )
+
+    embed.add_field(
+        name="🎯 Como Solicitar Mentoria",
+        value="Use o botão **'Solicitar Ajuda'** no painel de mentoria para enviar uma solicitação.",
+        inline=False
+    )
+
+    embed.set_footer(text="Bot de Mentoria | Use n! como prefixo para comandos")
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 
 
 # Error handlers para comandos de prefixo
+@help_command.error
+@setup_equipes.error
+@info_equipe.error
+@listar_canais_temp.error
+@limpar_canais_temp.error
+@remover_canais_usuario.error
 @setup_mentoria.error
 @mentoria_stats.error
 @export_solicitacoes.error
@@ -595,6 +1318,7 @@ async def command_error(ctx, error):
         await ctx.send("Você não tem permissão para usar este comando.")
 
 # Error handlers para comandos slash
+@help_command_slash.error
 @setup_mentoria_slash.error
 @mentoria_stats_slash.error
 @export_solicitacoes_slash.error

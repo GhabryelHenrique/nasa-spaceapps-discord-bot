@@ -17,6 +17,7 @@ class SolicitacaoMentoria(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     discord_user_id = Column(BigInteger, nullable=False)
     discord_username = Column(String(100), nullable=False)
+    team_name = Column(String(100), nullable=True)  # Nome da equipe (mentoria para equipes)
     
     # Dados da solicitação
     titulo = Column(String(200), nullable=False)

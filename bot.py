@@ -279,6 +279,7 @@ Aqui você pode criar sua própria equipe e liderar projetos incríveis com outr
 **🎯 Como funciona:**
 • Clique no botão abaixo para criar sua equipe
 • Preencha um formulário simples de 3 passos
+• Escolha seu desafio do NASA Space Apps Challenge
 • Receba canais exclusivos e role da equipe
 • Ganhe um canal privado de liderança
 • Adicione até 5 membros à sua equipe

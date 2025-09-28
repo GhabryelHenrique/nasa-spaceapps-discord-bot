@@ -27,6 +27,20 @@ class MentoriaRequestView(discord.ui.View):
                 # Tentar criar canal privado no servidor
                 guild = interaction.guild
                 if guild:
+                    # Verificar se o usuário está em uma equipe
+                    team_roles = [role for role in interaction.user.roles if role.name.startswith("Equipe ")]
+                    if not team_roles:
+                        await interaction.response.send_message(
+                            "❌ **Mentoria apenas para membros de equipe!**\n\n"
+                            "Para solicitar mentoria, você precisa fazer parte de uma equipe.\n"
+                            "Use o sistema de criação de equipes ou peça para ser adicionado a uma equipe existente.",
+                            ephemeral=True
+                        )
+                        return
+
+                    # Extrair nome da equipe
+                    team_name = team_roles[0].name.replace("Equipe ", "")
+
                     category = discord.utils.get(guild.categories, name='Solicitações Mentoria')
                     
                     # Criar categoria se não existir
@@ -71,7 +85,7 @@ class MentoriaRequestView(discord.ui.View):
                     )
                     
                     # Iniciar processo de solicitação
-                    bot.mentoria_handler.start_mentoria_request(interaction.user.id, interaction.user.display_name)
+                    bot.mentoria_handler.start_mentoria_request(interaction.user.id, interaction.user.display_name, team_name)
                     
                     embed = discord.Embed(
                         title="📝 Solicitação de Mentoria",
@@ -96,7 +110,7 @@ class MentoriaRequestView(discord.ui.View):
                 
                 else:
                     # Fallback para DM se não estiver em servidor
-                    bot.mentoria_handler.start_mentoria_request(interaction.user.id, interaction.user.display_name)
+                    bot.mentoria_handler.start_mentoria_request(interaction.user.id, interaction.user.display_name, None)
                     
                     embed = discord.Embed(
                         title="📝 Solicitação de Mentoria",

@@ -128,8 +128,8 @@ Escolha um nome único e criativo para sua equipe.
                 await self.process_name_step(message, session)
             elif step == 'description':
                 await self.process_description_step(message, session)
-            elif step == 'category':
-                await self.process_category_step(message, session)
+            elif step == 'challenge':
+                await self.process_challenge_step(message, session)
 
         except Exception as e:
             self.logger.error(f"Erro no processamento da criação de equipe para {user_id}", exc_info=e)
@@ -196,57 +196,101 @@ Descreva o propósito da sua equipe e o que vocês pretendem fazer.
 
         # Salvar descrição e avançar
         session['data']['description'] = descricao
-        session['step'] = 'category'
+        session['step'] = 'challenge'
 
         embed = discord.Embed(
             title="🏆 Criação de Equipe - Passo 3/3",
             description=f"""**Nome:** {session['data']['name']} ✅
 **Descrição:** {descricao} ✅
 
-**🎯 Passo 3: Categoria da Equipe**
-Escolha a categoria que melhor representa sua equipe.
+**🚀 Passo 3: Desafio NASA Space Apps**
+Escolha o desafio que sua equipe pretende resolver no NASA Space Apps Challenge 2025!
 
-**Categorias disponíveis:**
-`1` - 💻 **Programação & Desenvolvimento**
-`2` - 🎨 **Design & Criatividade**
-`3` - 📊 **Dados & Analytics**
-`4` - 🎮 **Jogos & Entretenimento**
-`5` - 🔬 **Ciência & Pesquisa**
-`6` - 💼 **Negócios & Empreendedorismo**
-`7` - 🎓 **Educação & Ensino**
-`8` - 🌐 **Geral & Outros**
+**Como escolher:**
+• Digite o **número** do desafio desejado
+• Você pode mudar de desafio depois se necessário
+• Cada equipe pode trabalhar em apenas 1 desafio
 
-**Digite o número da categoria escolhida:**""",
+**🏆 Desafios Disponíveis:**""",
             color=discord.Color.blue()
         )
 
+        # Carregar desafios do arquivo JSON
+        try:
+            import json
+            with open('challengers.json', 'r', encoding='utf-8') as f:
+                challenges = json.load(f)
+
+            # Adicionar desafios em grupos para não exceder limite do embed
+            challenge_text = ""
+            for i, challenge in enumerate(challenges[:15], 1):  # Mostrar apenas os primeiros 15
+                challenge_text += f"`{i:2d}` - {challenge['title']}\n"
+
+            if len(challenges) > 15:
+                challenge_text += f"\n... e mais {len(challenges) - 15} desafios disponíveis"
+
+            embed.add_field(
+                name="🎯 Desafios 1-15",
+                value=challenge_text,
+                inline=False
+            )
+
+            # Adicionar mais desafios se houver
+            if len(challenges) > 15:
+                challenge_text2 = ""
+                for i, challenge in enumerate(challenges[15:30], 16):
+                    challenge_text2 += f"`{i:2d}` - {challenge['title']}\n"
+
+                embed.add_field(
+                    name="🎯 Desafios 16-30",
+                    value=challenge_text2,
+                    inline=False
+                )
+
+            embed.add_field(
+                name="💡 Dica",
+                value="Escolha um desafio que combine com as habilidades da sua equipe!",
+                inline=False
+            )
+
+        except Exception as e:
+            embed.add_field(
+                name="❌ Erro",
+                value="Não foi possível carregar os desafios. Digite '0' para pular esta etapa.",
+                inline=False
+            )
+
         await message.channel.send(embed=embed)
 
-    async def process_category_step(self, message, session):
-        """Processa a categoria e finaliza criação"""
+    async def process_challenge_step(self, message, session):
+        """Processa a seleção do desafio"""
         try:
-            categoria_num = int(message.content.strip())
-            if categoria_num not in range(1, 9):
-                raise ValueError()
-        except ValueError:
-            await message.channel.send("❌ Digite um número válido de 1 a 8:")
+            challenge_num = int(message.content.strip())
+
+            # Carregar desafios
+            import json
+            with open('challengers.json', 'r', encoding='utf-8') as f:
+                challenges = json.load(f)
+
+            if challenge_num == 0:
+                # Pular seleção de desafio
+                session['data']['challenge'] = None
+                session['data']['challenge_title'] = "Desafio a ser definido"
+            elif 1 <= challenge_num <= len(challenges):
+                selected_challenge = challenges[challenge_num - 1]
+                session['data']['challenge'] = selected_challenge
+                session['data']['challenge_title'] = selected_challenge['title']
+            else:
+                await message.channel.send(f"❌ Digite um número válido de 1 a {len(challenges)} (ou 0 para pular):")
+                return
+
+        except (ValueError, FileNotFoundError):
+            await message.channel.send("❌ Digite um número válido ou 0 para pular:")
             return
 
-        categorias = {
-            1: "💻 Programação & Desenvolvimento",
-            2: "🎨 Design & Criatividade",
-            3: "📊 Dados & Analytics",
-            4: "🎮 Jogos & Entretenimento",
-            5: "🔬 Ciência & Pesquisa",
-            6: "💼 Negócios & Empreendedorismo",
-            7: "🎓 Educação & Ensino",
-            8: "🌐 Geral & Outros"
-        }
-
-        session['data']['category'] = categorias[categoria_num]
-
-        # Criar a equipe
+        # Finalizar criação da equipe (sem categoria)
         await self.create_team(message, session)
+
 
     async def create_team(self, message, session):
         """Cria a equipe efetivamente"""
@@ -257,7 +301,8 @@ Escolha a categoria que melhor representa sua equipe.
 
             nome = data['name']
             descricao = data['description']
-            categoria = data['category']
+            challenge_info = data.get('challenge')
+            challenge_title = data.get('challenge_title', 'Desafio a ser definido')
 
             # Criar role da equipe
             team_color = discord.Color.random()
@@ -363,7 +408,7 @@ Escolha a categoria que melhor representa sua equipe.
                 name="📋 Informações da Equipe",
                 value=f"""
                 **Nome:** {nome}
-                **Categoria:** {categoria}
+                **Desafio:** {challenge_title}
                 **Líder:** {user.mention}
                 **Membros:** 1/6
                 """,
@@ -391,16 +436,15 @@ Escolha a categoria que melhor representa sua equipe.
             await message.channel.send(embed=success_embed)
 
             # Configurar canal de liderança
-            await self.setup_leader_channel(leader_channel, nome, user.id, team_color, descricao)
+            await self.setup_leader_channel(leader_channel, nome, user.id, team_color, descricao, challenge_title)
 
             # Mensagem de boas-vindas no canal da equipe
             welcome_embed = discord.Embed(
                 title=f"🎉 Bem-vindos à Equipe {nome}!",
                 description=f"""
-                **{categoria}**
-
                 {descricao}
 
+                **🚀 Desafio:** {challenge_title}
                 **👑 Líder:** {user.mention}
                 **👥 Membros:** 1/6
 
@@ -428,7 +472,7 @@ Escolha a categoria que melhor representa sua equipe.
             self.logger.error(f"Erro ao criar equipe", exc_info=e)
             await message.channel.send("❌ Erro ao criar equipe. Tente novamente mais tarde.")
 
-    async def setup_leader_channel(self, channel, team_name, leader_id, color, description):
+    async def setup_leader_channel(self, channel, team_name, leader_id, color, description, challenge_title="Desafio a ser definido"):
         """Configura o canal de liderança com painel de controle"""
         embed = discord.Embed(
             title=f"👑 Painel de Liderança - {team_name}",
@@ -439,6 +483,7 @@ Aqui você pode gerenciar sua equipe completamente.
 **📋 Informações Atuais:**
 • **Nome:** {team_name}
 • **Descrição:** {description}
+• **Desafio:** {challenge_title}
 • **Membros:** 1/6
 • **Status:** Ativa
 

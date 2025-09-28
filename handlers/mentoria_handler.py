@@ -104,6 +104,7 @@ class MentoriaHandler:
                 solicitacao = SolicitacaoMentoria(
                     discord_user_id=user_id,
                     discord_username=session['username'],
+                    team_name=session.get('team_name'),
                     titulo=session['titulo'],
                     descricao=session['descricao'],
                     area_conhecimento=session['area'],
@@ -159,11 +160,18 @@ class MentoriaHandler:
                 color=discord.Color.blue()
             )
             
-            embed.add_field(
-                name="👤 Solicitante",
-                value=solicitacao.discord_username,
-                inline=True
-            )
+            if solicitacao.team_name:
+                embed.add_field(
+                    name="👥 Equipe",
+                    value=f"**{solicitacao.team_name}**\n*Solicitado por {solicitacao.discord_username}*",
+                    inline=True
+                )
+            else:
+                embed.add_field(
+                    name="👤 Solicitante",
+                    value=solicitacao.discord_username,
+                    inline=True
+                )
             
             embed.add_field(
                 name="📚 Área",
@@ -233,48 +241,99 @@ class MentoriaHandler:
             return False, "Erro interno."
 
     async def _notify_user_mentor_assigned(self, solicitacao, mentor_username):
-        """Notifica o usuário que um mentor assumiu sua solicitação"""
+        """Notifica a equipe que um mentor assumiu sua solicitação"""
         try:
+            # Se há nome da equipe, tentar notificar o canal da equipe
+            if solicitacao.team_name:
+                guild = self.bot.get_guild(int(config.GUILD_ID)) if config.GUILD_ID else None
+                if not guild:
+                    guild = self.bot.guilds[0] if self.bot.guilds else None
+
+                if guild:
+                    # Procurar canal da equipe
+                    team_channel = discord.utils.get(
+                        guild.text_channels,
+                        name=f"💬│{solicitacao.team_name.lower().replace(' ', '-')}"
+                    )
+
+                    if team_channel:
+                        embed = discord.Embed(
+                            title="✅ Mentor Encontrado para a Equipe!",
+                            description=f"A solicitação **\"{solicitacao.titulo}\"** da equipe foi assumida por um mentor!",
+                            color=discord.Color.green()
+                        )
+
+                        embed.add_field(
+                            name="👥 Equipe",
+                            value=solicitacao.team_name,
+                            inline=True
+                        )
+
+                        embed.add_field(
+                            name="👨‍🏫 Mentor",
+                            value=mentor_username,
+                            inline=True
+                        )
+
+                        embed.add_field(
+                            name="📚 Área",
+                            value=solicitacao.area_conhecimento,
+                            inline=True
+                        )
+
+                        embed.add_field(
+                            name="📝 Solicitação",
+                            value=solicitacao.descricao[:200] + ("..." if len(solicitacao.descricao) > 200 else ""),
+                            inline=False
+                        )
+
+                        embed.set_footer(text="O mentor entrará em contato com a equipe em breve!")
+
+                        await team_channel.send(embed=embed)
+                        return
+
+            # Fallback: notificar o usuário individual por DM
             user = self.bot.get_user(solicitacao.discord_user_id)
             if not user:
                 return
-            
+
             embed = discord.Embed(
                 title="✅ Mentor Encontrado!",
                 description=f"Sua solicitação **\"{solicitacao.titulo}\"** foi assumida por um mentor!",
                 color=discord.Color.green()
             )
-            
+
             embed.add_field(
                 name="👨‍🏫 Mentor",
                 value=mentor_username,
                 inline=True
             )
-            
+
             embed.add_field(
                 name="📚 Área",
                 value=solicitacao.area_conhecimento,
                 inline=True
             )
-            
+
             embed.add_field(
                 name="📝 Sua solicitação",
                 value=solicitacao.descricao[:200] + ("..." if len(solicitacao.descricao) > 200 else ""),
                 inline=False
             )
-            
+
             embed.set_footer(text="O mentor entrará em contato com você em breve!")
-            
+
             await user.send(embed=embed)
             
         except Exception as e:
             self.logger.error(f"Erro ao notificar usuário sobre mentor atribuído", exc_info=e)
 
-    def start_mentoria_request(self, user_id, username):
+    def start_mentoria_request(self, user_id, username, team_name=None):
         """Inicia o processo de solicitação de mentoria"""
         self.user_sessions[user_id] = {
             'step': 'titulo',
-            'username': username
+            'username': username,
+            'team_name': team_name
         }
 
 class UrgenciaSelectionView(discord.ui.View):

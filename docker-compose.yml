@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nasa_bot_postgres
+    environment:
+      POSTGRES_DB: nasa_spaceapps_bot
+      POSTGRES_USER: nasa_user
+      POSTGRES_PASSWORD: nasa_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nasa_user -d nasa_spaceapps_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: .
+    container_name: nasa_discord_bot
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - GUILD_ID=${GUILD_ID}
+      - DATABASE_URL=postgresql://nasa_user:nasa_password_123@postgres:5432/nasa_spaceapps_bot
+      - LOG_CHANNEL_ID=${LOG_CHANNEL_ID}
+    volumes:
+      - ./logs:/app/logs
+      - ./nasa_spaceapps_bot.log:/app/nasa_spaceapps_bot.log
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  postgres_data:
+    driver: local

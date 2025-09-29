@@ -24,7 +24,7 @@ async def migrate_database():
     """Remove area_conhecimento and nivel_urgencia columns from the database"""
     try:
         # Get database URL from environment variable
-        database_url = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:senha123@localhost:5432/nasa_bot')
+        database_url = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:1029384756Gh!@localhost:5432/nasa_bot')
 
         # Convert to async URL for asyncpg driver
         async_database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://')

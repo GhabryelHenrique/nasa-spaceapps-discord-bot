@@ -103,8 +103,14 @@ class MentoriaHandler:
                 return True, solicitacao.id
 
         except Exception as e:
-            self.logger.error(f"Erro ao salvar solicitação de mentoria para usuário {user_id}", exc_info=e)
-            return False, "Erro interno. Tente novamente."
+            # Verificar se é erro de conexão com o banco de dados
+            import socket
+            if isinstance(e.__cause__, socket.gaierror) or "name resolution" in str(e):
+                self.logger.error(f"Erro de conexão com o banco de dados para usuário {user_id}: {e}", exc_info=e)
+                return False, "Erro de conexão com o banco de dados. Verifique se o serviço está disponível."
+            else:
+                self.logger.error(f"Erro ao salvar solicitação de mentoria para usuário {user_id}: {e}", exc_info=e)
+                return False, "Erro interno. Tente novamente."
 
     async def _notify_mentors(self, solicitacao):
         """Notifica os mentores sobre nova solicitação"""

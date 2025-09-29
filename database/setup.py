@@ -19,6 +19,9 @@ class DatabaseSetup:
     def _get_database_urls(self):
         """Converte URLs entre formatos sync/async"""
         base_url = config.DATABASE_URL
+
+        # Log da URL para debug
+        print(f"DEBUG: Using database URL: {base_url}")
         
         # URL sync (para criação de tabelas)
         if base_url.startswith('postgresql+asyncpg://'):
@@ -51,6 +54,7 @@ class DatabaseSetup:
     def test_connection(self):
         """Testa conexão com o banco de dados"""
         try:
+            print(f"Testing connection with engine: {self.sync_engine.url}")
             with self.sync_engine.connect() as connection:
                 result = connection.execute(text("SELECT 1"))
                 return result.fetchone() is not None

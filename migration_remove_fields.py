@@ -26,8 +26,11 @@ async def migrate_database():
         # Get database URL from environment variable
         database_url = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:senha123@localhost:5432/nasa_bot')
 
+        # Convert to async URL for asyncpg driver
+        async_database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://')
+
         # Create async engine for migration operations
-        async_engine = create_async_engine(database_url)
+        async_engine = create_async_engine(async_database_url)
 
         async with async_engine.begin() as conn:
             logger.info("Starting migration to remove area_conhecimento and nivel_urgencia fields...")

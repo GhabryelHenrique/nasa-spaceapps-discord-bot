@@ -15,7 +15,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nasa_user -d nasa_spaceapps_bot"]
+      test: ["CMD-SHELL", "pg_isready -U nasa_bot_user -d nasa_bot"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,11 +26,11 @@ services:
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - GUILD_ID=${GUILD_ID}
-      - DATABASE_URL=postgresql://nasa_user:nasa_password_123@postgres:5432/nasa_spaceapps_bot
+      - DATABASE_URL=postgresql://nasa_bot_user:1029384756Gh!@localhost:5432/nasa_bot
       - LOG_CHANNEL_ID=${LOG_CHANNEL_ID}
     volumes:
       - ./logs:/app/logs
-      - ./nasa_spaceapps_bot.log:/app/nasa_spaceapps_bot.log
+      - ./nasa_bot.log:/app/nasa_bot.log
     depends_on:
       postgres:
         condition: service_healthy

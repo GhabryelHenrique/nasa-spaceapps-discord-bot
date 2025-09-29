@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: nasa_bot_postgres
     environment:
-      POSTGRES_DB: nasa_spaceapps_bot
+      POSTGRES_DB: nasa_bot
       POSTGRES_USER: nasa_bot_user
       POSTGRES_PASSWORD: 1029384756Gh!
     volumes:

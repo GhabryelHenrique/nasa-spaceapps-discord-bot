@@ -20,9 +20,28 @@ class DatabaseSetup:
         """Converte URLs entre formatos sync/async"""
         base_url = config.DATABASE_URL
 
+        # Detectar se estamos fora do Docker e ajustar host
+        if 'localhost' in base_url or '127.0.0.1' in base_url:
+            # Tentar conectar primeiro ao localhost, se falhar, usar container
+            try:
+                import socket
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                result = sock.connect_ex(('localhost', 5432))
+                sock.close()
+
+                if result != 0:
+                    # localhost não responde, usar container
+                    base_url = base_url.replace('localhost', 'nasa_bot_postgres')
+                    print(f"DEBUG: Localhost não disponível, usando container: nasa_bot_postgres")
+            except Exception:
+                # Se houver erro, usar container
+                base_url = base_url.replace('localhost', 'nasa_bot_postgres')
+                print(f"DEBUG: Erro testando localhost, usando container: nasa_bot_postgres")
+
         # Log da URL para debug
         print(f"DEBUG: Using database URL: {base_url}")
-        
+
         # URL sync (para criação de tabelas)
         if base_url.startswith('postgresql+asyncpg://'):
             sync_url = base_url.replace('postgresql+asyncpg://', 'postgresql+psycopg2://')
@@ -66,24 +85,8 @@ class DatabaseSetup:
         """Cria todos os ENUMs necessários"""
         enums_sql = [
             {
-                'name': 'escolaridadeenum',
-                'values': [
-                    'Fundamental I', 'Fundamental II', 'Ensino Médio',
-                    'Graduando', 'Ensino Superior', 'Ensino Superior Completo',
-                    'Mestrando', 'Mestrado Completo', 'Doutorando',
-                    'Doutorado Completo', 'PHD ou +'
-                ]
-            },
-            {
-                'name': 'modalidadeenum',
-                'values': [
-                    'Presencialmente em Uberlândia',
-                    'Remotamente de qualquer lugar do mundo'
-                ]
-            },
-            {
-                'name': 'statusaplicacaoenum',
-                'values': ['Pendente', 'Aprovada', 'Rejeitada', 'Cancelada']
+                'name': 'statussolicitacaoenum',
+                'values': ['Pendente', 'Em Andamento', 'Concluída', 'Cancelada']
             }
         ]
 
@@ -114,10 +117,15 @@ class DatabaseSetup:
     def initialize_database(self):
         """Inicialização completa do banco"""
         print("Inicializando banco de dados de mentoria...")
-        
+        print(f"Conectando com: {config.DATABASE_URL}")
+
         # Testar conexão
         if not self.test_connection():
             print("Falha na conexao com o banco de dados")
+            print("Verifique se:")
+            print("• O PostgreSQL está rodando (docker-compose up)")
+            print("• As credenciais no .env estão corretas")
+            print("• O banco de dados 'nasa_bot' existe")
             return False
 
         # Criar ENUMs

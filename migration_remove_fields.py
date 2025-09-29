@@ -6,10 +6,15 @@ This script safely removes the columns that are no longer needed.
 
 import asyncio
 import sys
-from sqlalchemy import text
-from database.setup import db_setup
+import os
+from dotenv import load_dotenv
+from sqlalchemy import text, create_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from database.models import Base
 import logging
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,8 +23,11 @@ logger = logging.getLogger(__name__)
 async def migrate_database():
     """Remove area_conhecimento and nivel_urgencia columns from the database"""
     try:
-        # Get async engine for migration operations
-        async_engine = db_setup.async_engine
+        # Get database URL from environment variable
+        database_url = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:senha123@localhost:5432/nasa_bot')
+
+        # Create async engine for migration operations
+        async_engine = create_async_engine(database_url)
 
         async with async_engine.begin() as conn:
             logger.info("Starting migration to remove area_conhecimento and nivel_urgencia fields...")
@@ -72,7 +80,11 @@ async def migrate_database():
 def verify_migration():
     """Verify that the migration was successful by checking the table structure"""
     try:
-        sync_engine = db_setup.sync_engine
+        # Get database URL from environment variable
+        database_url = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:senha123@localhost:5432/nasa_bot')
+
+        # Create sync engine for verification
+        sync_engine = create_engine(database_url)
 
         with sync_engine.begin() as conn:
             # Get current table structure

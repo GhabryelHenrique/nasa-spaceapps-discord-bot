@@ -8,7 +8,7 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD_ID = int(os.getenv('GUILD_ID')) if os.getenv('GUILD_ID') else None
 
 # Configurações do Banco de Dados
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:senha123@localhost:5432/nasa_bot')
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://nasa_bot_user:1029384756Gh!@localhost:5432/nasa_bot')
 
 # Outras configurações
 REGISTRATION_CATEGORY_NAME = "NASA Space Apps - Inscrições"

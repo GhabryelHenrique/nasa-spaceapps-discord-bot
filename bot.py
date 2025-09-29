@@ -558,13 +558,29 @@ Agora você pode criar e liderar sua própria equipe!
                         # Extrair nome da equipe do nome do canal
                         # Formato: 👑│team-name-lider -> team-name
                         channel_name_clean = leader_channel.name.replace("👑│", "").replace("-lider", "")
-                        team_name_parts = channel_name_clean.split("-")
-                        team_name = " ".join(word.capitalize() for word in team_name_parts)
 
-                        # Buscar role de líder para identificar o leader_id
-                        leader_role = discord.utils.get(guild.roles, name=f"Líder {team_name}")
+                        # Tentar diferentes padrões de capitalização para encontrar a role correta
+                        possible_team_names = [
+                            channel_name_clean,  # nome original (ex: dataroots)
+                            channel_name_clean.capitalize(),  # primeira letra maiúscula (ex: Dataroots)
+                            " ".join(word.capitalize() for word in channel_name_clean.split("-")),  # cada palavra capitalizada (ex: Data Roots)
+                            channel_name_clean.upper(),  # tudo maiúsculo (ex: DATAROOTS)
+                            channel_name_clean.lower(),  # tudo minúsculo (ex: dataroots)
+                        ]
+
+                        # Buscar role de líder testando diferentes padrões
+                        leader_role = None
+                        team_name = None
+                        for possible_name in possible_team_names:
+                            leader_role = discord.utils.get(guild.roles, name=f"Líder {possible_name}")
+                            if leader_role:
+                                team_name = possible_name
+                                break
+
                         if not leader_role:
-                            self.logger.warning(f"Role de líder não encontrada para equipe: {team_name}")
+                            # Se não encontrar, listar roles disponíveis para debug
+                            leader_roles = [role.name for role in guild.roles if role.name.startswith("Líder")]
+                            self.logger.warning(f"Role de líder não encontrada para canal {leader_channel.name}. Roles disponíveis: {leader_roles}")
                             continue
 
                         # Buscar membro com role de líder
@@ -578,7 +594,9 @@ Agora você pode criar e liderar sua própria equipe!
                         # Buscar role da equipe para obter informações
                         team_role = discord.utils.get(guild.roles, name=f"Equipe {team_name}")
                         if not team_role:
-                            self.logger.warning(f"Role da equipe não encontrada: {team_name}")
+                            # Se não encontrar, listar roles disponíveis para debug
+                            team_roles = [role.name for role in guild.roles if role.name.startswith("Equipe")]
+                            self.logger.warning(f"Role da equipe não encontrada: {team_name}. Roles disponíveis: {team_roles}")
                             continue
 
                         # Contar membros da equipe

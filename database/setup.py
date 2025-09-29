@@ -35,7 +35,8 @@ class DatabaseSetup:
                     base_url = base_url.replace('localhost', 'nasa_bot_postgres')
                     print(f"DEBUG: Localhost não disponível, usando container: nasa_bot_postgres")
             except Exception:
-                # Se houver erro, usar container
+
+            # Se houver erro, usar container
                 base_url = base_url.replace('localhost', 'nasa_bot_postgres')
                 print(f"DEBUG: Erro testando localhost, usando container: nasa_bot_postgres")
 
@@ -85,8 +86,13 @@ class DatabaseSetup:
         """Cria todos os ENUMs necessários"""
         enums_sql = [
             {
+<<<<<<< HEAD
                 'name': 'statussolicitacaoenum',
                 'values': ['Pendente', 'Em Andamento', 'Concluída', 'Cancelada']
+=======
+            'name': 'statussolicitacaoenum',
+            'values': ['Pendente', 'Em Andamento', 'Concluída', 'Cancelada']
+>>>>>>> a269f13e9aae25b953827b04a2ea4fa978cf00d0
             }
         ]
 

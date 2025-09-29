@@ -1,0 +1,108 @@
+name: Deploy Discord Bot to VPS
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 22
+        script: |
+          set -e
+
+          echo "🚀 Starting deployment process..."
+
+          # Navigate to project directory (adjust path as needed)
+          cd nasa-spaceapps-discord-bot || cd /opt/discord-bot || cd ~/discord-bot || {
+            echo "❌ Project directory not found. Creating new deployment..."
+            cd /root
+            git clone ${{ github.repositoryUrl }} || {
+              echo "❌ Failed to clone repository"
+              exit 1
+            }
+            cd nasa-spaceapps-discord-bot
+          }
+
+          echo "📥 Pulling latest code..."
+          git fetch origin || {
+            echo "❌ Failed to fetch from origin"
+            exit 1
+          }
+          git pull origin main || git pull origin master || {
+            echo "❌ Failed to pull latest code"
+            exit 1
+          }
+
+          echo "🛑 Stopping current bot container..."
+          docker-compose down bot --timeout 30 || echo "⚠️  Bot container was not running"
+
+          echo "🔨 Building new Docker image..."
+          docker-compose build --no-cache bot
+
+          echo "🧹 Cleaning up old images..."
+          docker image prune -f
+
+          echo "🚀 Starting bot with new image..."
+          docker-compose up -d bot
+
+          echo "⏳ Waiting for bot to initialize..."
+          sleep 10
+
+          echo "🔍 Checking bot status..."
+          if docker-compose ps bot | grep -q "Up"; then
+            echo "✅ Bot deployed and running successfully!"
+            docker-compose logs --tail=20 bot
+          else
+            echo "❌ Bot failed to start. Check logs:"
+            docker-compose logs --tail=50 bot
+            exit 1
+          fi
+
+          echo "🎉 Deployment completed successfully!"
+
+    - name: Verify Deployment
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 22
+        script: |
+          echo "🔍 Verifying deployment..."
+
+          # Navigate to project directory
+          cd nasa-spaceapps-discord-bot || cd /opt/discord-bot || cd ~/discord-bot
+
+          echo "📊 Container Status:"
+          docker-compose ps
+
+          echo ""
+          echo "📋 Recent Bot Logs:"
+          docker-compose logs --tail=10 bot
+
+          echo ""
+          echo "💾 Resource Usage:"
+          docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+    - name: Notification
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment successful!"
+        else
+          echo "❌ Deployment failed!"
+        fi

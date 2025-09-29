@@ -23,12 +23,8 @@ class MentoriaHandler:
         
         if step == 'titulo':
             await self._process_titulo(message, session)
-        elif step == 'area':
-            await self._process_area(message, session)
         elif step == 'descricao':
             await self._process_descricao(message, session)
-        elif step == 'urgencia':
-            await self._process_urgencia(message, session)
 
     async def _process_titulo(self, message, session):
         """Processa o título da solicitação"""
@@ -43,26 +39,10 @@ class MentoriaHandler:
             return
         
         session['titulo'] = titulo
-        session['step'] = 'area'
-        
-        await message.reply("✅ **Título registrado!**\n\n📚 **Qual é a área de conhecimento?**\nExemplos: Python, JavaScript, Machine Learning, Design, etc.")
-
-    async def _process_area(self, message, session):
-        """Processa a área de conhecimento"""
-        area = message.content.strip()
-        
-        if len(area) < 3:
-            await message.reply("❌ A área deve ter pelo menos 3 caracteres. Tente novamente:")
-            return
-        
-        if len(area) > 100:
-            await message.reply("❌ A área deve ter no máximo 100 caracteres. Tente novamente:")
-            return
-        
-        session['area'] = area
         session['step'] = 'descricao'
-        
-        await message.reply("✅ **Área registrada!**\n\n📝 **Descreva sua dúvida ou o que precisa de ajuda:**\nSeja específico para que os mentores possam te ajudar melhor.")
+
+        await message.reply("✅ **Título registrado!**\n\n📝 **Descreva sua dúvida ou o que precisa de ajuda:**\nSeja específico para que os mentores possam te ajudar melhor. Inclua a área do conhecimento se relevante.\n\n**Exemplos de áreas:** Biologia, Física, Química, Matemática, Termodinâmica, Mecânica, Astronomia, Geologia, etc.")
+
 
     async def _process_descricao(self, message, session):
         """Processa a descrição da solicitação"""
@@ -77,27 +57,26 @@ class MentoriaHandler:
             return
         
         session['descricao'] = descricao
-        session['step'] = 'urgencia'
-        
-        urgencia_embed = discord.Embed(
-            title="⏱️ Nível de Urgência",
-            description="Escolha o nível de urgência da sua solicitação:",
-            color=discord.Color.blue()
-        )
-        urgencia_embed.add_field(name="🟢 Baixa", value="Não é urgente, posso aguardar", inline=True)
-        urgencia_embed.add_field(name="🟡 Média", value="Preciso de ajuda nos próximos dias", inline=True)
-        urgencia_embed.add_field(name="🔴 Alta", value="Preciso de ajuda urgentemente", inline=True)
-        
-        view = UrgenciaSelectionView(self)
-        await message.reply(embed=urgencia_embed, view=view)
 
-    async def _process_urgencia(self, urgencia, user_id):
-        """Finaliza a solicitação com o nível de urgência"""
+        # Finalizar solicitação diretamente
+        success, result = await self._process_finalizacao(message.author.id)
+        if success:
+            embed = discord.Embed(
+                title="✅ Solicitação Enviada!",
+                description=f"Sua solicitação foi registrada com sucesso! ID: #{result}\n\nOs mentores foram notificados e em breve alguém entrará em contato com você.",
+                color=discord.Color.green()
+            )
+            await message.reply(embed=embed)
+        else:
+            await message.reply(f"❌ Erro: {result}")
+
+    async def _process_finalizacao(self, user_id):
+        """Finaliza a solicitação"""
         if user_id not in self.user_sessions:
             return False, "Sessão não encontrada."
-        
+
         session = self.user_sessions[user_id]
-        
+
         # Salvar no banco de dados
         try:
             async with await DatabaseManager.get_session() as db_session:
@@ -107,24 +86,22 @@ class MentoriaHandler:
                     team_name=session.get('team_name'),
                     titulo=session['titulo'],
                     descricao=session['descricao'],
-                    area_conhecimento=session['area'],
-                    nivel_urgencia=urgencia,
                     status=StatusSolicitacaoEnum.PENDENTE
                 )
-                
+
                 db_session.add(solicitacao)
                 await db_session.commit()
-                
+
                 # Limpar sessão
                 del self.user_sessions[user_id]
-                
+
                 # Notificar mentores
                 await self._notify_mentors(solicitacao)
-                
+
                 self.logger.info(f"Nova solicitação de mentoria criada: {solicitacao.titulo} por {session['username']}")
-                
+
                 return True, solicitacao.id
-        
+
         except Exception as e:
             self.logger.error(f"Erro ao salvar solicitação de mentoria para usuário {user_id}", exc_info=e)
             return False, "Erro interno. Tente novamente."
@@ -147,19 +124,12 @@ class MentoriaHandler:
                 self.logger.warning("Canal 'mentores' não encontrado")
                 return
             
-            # Emoji baseado na urgência
-            urgencia_emoji = {
-                'Baixa': '🟢',
-                'Média': '🟡', 
-                'Alta': '🔴'
-            }
-            
             embed = discord.Embed(
                 title="🆕 Nova Solicitação de Mentoria",
                 description=f"**{solicitacao.titulo}**",
                 color=discord.Color.blue()
             )
-            
+
             if solicitacao.team_name:
                 embed.add_field(
                     name="👥 Equipe",
@@ -172,18 +142,6 @@ class MentoriaHandler:
                     value=solicitacao.discord_username,
                     inline=True
                 )
-            
-            embed.add_field(
-                name="📚 Área",
-                value=solicitacao.area_conhecimento,
-                inline=True
-            )
-            
-            embed.add_field(
-                name="⏱️ Urgência",
-                value=f"{urgencia_emoji.get(solicitacao.nivel_urgencia, '⚪')} {solicitacao.nivel_urgencia}",
-                inline=True
-            )
             
             embed.add_field(
                 name="📝 Descrição",
@@ -276,12 +234,6 @@ class MentoriaHandler:
                         )
 
                         embed.add_field(
-                            name="📚 Área",
-                            value=solicitacao.area_conhecimento,
-                            inline=True
-                        )
-
-                        embed.add_field(
                             name="📝 Solicitação",
                             value=solicitacao.descricao[:200] + ("..." if len(solicitacao.descricao) > 200 else ""),
                             inline=False
@@ -310,12 +262,6 @@ class MentoriaHandler:
             )
 
             embed.add_field(
-                name="📚 Área",
-                value=solicitacao.area_conhecimento,
-                inline=True
-            )
-
-            embed.add_field(
                 name="📝 Sua solicitação",
                 value=solicitacao.descricao[:200] + ("..." if len(solicitacao.descricao) > 200 else ""),
                 inline=False
@@ -336,49 +282,6 @@ class MentoriaHandler:
             'team_name': team_name
         }
 
-class UrgenciaSelectionView(discord.ui.View):
-    def __init__(self, handler):
-        super().__init__(timeout=300)
-        self.handler = handler
-
-    @discord.ui.button(label='Baixa', style=discord.ButtonStyle.success, emoji='🟢')
-    async def urgencia_baixa(self, interaction: discord.Interaction, button: discord.ui.Button):
-        success, result = await self.handler._process_urgencia('Baixa', interaction.user.id)
-        if success:
-            embed = discord.Embed(
-                title="✅ Solicitação Enviada!",
-                description=f"Sua solicitação foi registrada com sucesso! ID: #{result}\n\nOs mentores foram notificados e em breve alguém entrará em contato com você.",
-                color=discord.Color.green()
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            await interaction.response.send_message(f"❌ Erro: {result}", ephemeral=True)
-
-    @discord.ui.button(label='Média', style=discord.ButtonStyle.primary, emoji='🟡')
-    async def urgencia_media(self, interaction: discord.Interaction, button: discord.ui.Button):
-        success, result = await self.handler._process_urgencia('Média', interaction.user.id)
-        if success:
-            embed = discord.Embed(
-                title="✅ Solicitação Enviada!",
-                description=f"Sua solicitação foi registrada com sucesso! ID: #{result}\n\nOs mentores foram notificados e em breve alguém entrará em contato com você.",
-                color=discord.Color.green()
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            await interaction.response.send_message(f"❌ Erro: {result}", ephemeral=True)
-
-    @discord.ui.button(label='Alta', style=discord.ButtonStyle.danger, emoji='🔴')
-    async def urgencia_alta(self, interaction: discord.Interaction, button: discord.ui.Button):
-        success, result = await self.handler._process_urgencia('Alta', interaction.user.id)
-        if success:
-            embed = discord.Embed(
-                title="✅ Solicitação Enviada!",
-                description=f"Sua solicitação foi registrada com sucesso! ID: #{result}\n\nOs mentores foram notificados e em breve alguém entrará em contato com você.",
-                color=discord.Color.green()
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            await interaction.response.send_message(f"❌ Erro: {result}", ephemeral=True)
 
 class MentorResponseView(discord.ui.View):
     def __init__(self, solicitacao_id, handler):

@@ -22,8 +22,6 @@ class SolicitacaoMentoria(Base):
     # Dados da solicitação
     titulo = Column(String(200), nullable=False)
     descricao = Column(Text, nullable=False)
-    area_conhecimento = Column(String(100), nullable=False)
-    nivel_urgencia = Column(String(20), nullable=False)  # Baixa, Média, Alta
     
     # Status
     status = Column(Enum(StatusSolicitacaoEnum, values_callable=lambda x: [e.value for e in x]), default=StatusSolicitacaoEnum.PENDENTE)
@@ -36,4 +34,4 @@ class SolicitacaoMentoria(Base):
     data_conclusao = Column(DateTime, nullable=True)
     
     def __repr__(self):
-        return f"<SolicitacaoMentoria(titulo='{self.titulo}', area='{self.area_conhecimento}', status='{self.status.value}')>"
+        return f"<SolicitacaoMentoria(titulo='{self.titulo}', status='{self.status.value}')>"

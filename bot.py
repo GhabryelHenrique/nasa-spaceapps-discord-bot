@@ -5,6 +5,7 @@ import config
 from database.db import create_tables, DatabaseManager
 from views.mentoria_view import MentoriaRequestView
 from views.team_view import TeamRequestView
+from views.welcome_view import WelcomeView
 from handlers.mentoria_handler import MentoriaHandler
 from handlers.team_handler import TeamHandler
 from handlers.voice_handler import VoiceHandler
@@ -48,6 +49,7 @@ class MentoriaBot(commands.Bot):
             # Adicionar views persistentes
             self.add_view(MentoriaRequestView())
             self.add_view(TeamRequestView())
+            self.add_view(WelcomeView())
             self.logger.info("Views persistentes adicionadas")
             
             # Adicionar views de convites (serão recriadas dinamicamente quando necessário)
@@ -109,6 +111,118 @@ class MentoriaBot(commands.Bot):
         # Processar sistema de canais temporários
         if self.voice_handler:
             await self.voice_handler.handle_voice_state_update(member, before, after)
+
+    async def on_member_join(self, member):
+        """Processa entrada de novos membros"""
+        try:
+            # Buscar ou criar role "Participante"
+            guild = member.guild
+            participante_role = discord.utils.get(guild.roles, name="Participante")
+
+            if not participante_role:
+                # Criar role "Participante" com cor azul clara
+                participante_role = await guild.create_role(
+                    name="Participante",
+                    color=discord.Color(0x87CEEB),  # Cor azul clara (light blue)
+                    reason="Role automática para novos membros"
+                )
+                self.logger.info(f"Role 'Participante' criada no servidor {guild.name}")
+
+            # Adicionar role ao novo membro
+            await member.add_roles(participante_role, reason="Novo membro - role automática")
+            self.logger.info(f"Role 'Participante' adicionada ao membro {member.display_name} ({member.id})")
+
+            # Enviar mensagem de boas-vindas
+            await self.send_welcome_message(member)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao processar entrada do membro {member.id}", exc_info=e)
+
+    async def send_welcome_message(self, member):
+        """Envia mensagem de boas-vindas personalizada"""
+        try:
+            welcome_channel_id = 1402431275859579064
+            welcome_channel = self.get_channel(welcome_channel_id)
+
+            if not welcome_channel:
+                self.logger.warning(f"Canal de boas-vindas {welcome_channel_id} não encontrado")
+                return
+
+            # Criar embed principal de boas-vindas
+            embed = discord.Embed(
+                title="🌌 Bem-vindo(a) ao NASA Space Apps Uberlândia 2025! 🚀",
+                description=f"**Olá {member.mention}!** 👨‍🚀👩‍🚀\n\nVocê acaba de embarcar na maior jornada de inovação colaborativa do planeta! De Uberlândia ao universo, aqui conectamos mentes criativas para resolver desafios reais usando dados da NASA! 🌍✨",
+                color=discord.Color(0x1f4e79)  # Azul escuro NASA
+            )
+
+            # Campo sobre o evento
+            embed.add_field(
+                name="🚀 Sobre o NASA Space Apps Challenge",
+                value="""
+• **48 horas** de hackathon internacional
+• **Desafios reais** usando dados da NASA
+• **Equipes de até 6** pessoas
+• **Prêmios locais** e chance de competir globalmente
+• **Mentores especializados** para te ajudar
+                """,
+                inline=False
+            )
+
+            # Campo sobre os sistemas do servidor
+            embed.add_field(
+                name="🛸 Sistemas e Ferramentas do Servidor",
+                value="""
+🤖 **Bot de Mentoria**: Use `/mentoria` para solicitar ajuda de mentores experientes
+👥 **Sistema de Equipes**: Crie ou participe de equipes com `/equipes`
+📋 **Sistema de Inscrições**: Complete seu perfil para participar oficial
+🎮 **Gamificação**: Participe dos nossos jogos e desafios
+📊 **Painéis Interativos**: Botões para facilitar sua experiência
+                """,
+                inline=False
+            )
+
+            # Campo sobre os canais principais
+            embed.add_field(
+                name="📍 Navegação nos Canais",
+                value="""
+📢 **#anúncios** - Informações oficiais e programação
+📝 **#apresente-se** - Diga olá para a comunidade
+📋 **#regras** - Leia antes de participar
+🏆 **#equipes** - Monte ou encontre sua equipe
+❓ **#dúvidas** - Tire suas dúvidas sobre o evento
+💬 **#geral** - Conversas e networking
+                """,
+                inline=False
+            )
+
+            # Campo de próximos passos
+            embed.add_field(
+                name="🎯 Seus Próximos Passos",
+                value="""
+1️⃣ Leia as **#regras** do servidor
+2️⃣ Se apresente no **#apresente-se**
+3️⃣ Complete seu **perfil de inscrito**
+4️⃣ Encontre ou crie sua **equipe**
+5️⃣ Solicite **mentoria** quando precisar
+6️⃣ Acompanhe os **#anúncios** para cronograma
+                """,
+                inline=False
+            )
+
+            embed.set_footer(
+                text="🌠 'Quando colaboramos, podemos alcançar as estrelas!' - NASA Space Apps",
+                icon_url="https://cdn.discordapp.com/attachments/1000000000000000000/nasa_icon.png"
+            )
+            embed.set_thumbnail(url=member.display_avatar.url)
+
+            # Criar view com botões úteis
+            view = WelcomeView()
+
+            await welcome_channel.send(embed=embed, view=view)
+            self.logger.info(f"Mensagem de boas-vindas enviada para {member.display_name}")
+
+        except Exception as e:
+            self.logger.error(f"Erro ao enviar mensagem de boas-vindas para {member.id}", exc_info=e)
 
     async def on_command_error(self, ctx, error):
         """Trata erros de comandos de prefixo"""
@@ -212,6 +326,9 @@ class MentoriaBot(commands.Bot):
             if announcements_channel:
                 await self.send_updates_announcement(announcements_channel, channels_cleaned)
 
+            # Reenviar painéis de liderança
+            await self.resend_leader_panels()
+
         except Exception as e:
             self.logger.error("Erro no setup de canais e painéis", exc_info=e)
 
@@ -251,7 +368,7 @@ Clique no botão abaixo para solicitar mentoria!""",
 
             embed.add_field(
                 name="⚡ Resposta rápida",
-                value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
+                value="Nossos mentores se comprometem a responder rapidamente às suas solicitações.",
                 inline=False
             )
 
@@ -410,6 +527,127 @@ Agora você pode criar e liderar sua própria equipe!
         except Exception as e:
             self.logger.error("Erro ao enviar anúncio de atualizações", exc_info=e)
 
+    async def resend_leader_panels(self):
+        """Reenvia painéis de liderança na categoria especificada"""
+        try:
+            self.logger.info("Iniciando reenvio de painéis de liderança...")
+
+            # ID da categoria específica solicitada
+            target_category_id = 1421848872401240127
+
+            # Buscar a categoria alvo
+            target_category = self.get_channel(target_category_id)
+            if not target_category or not isinstance(target_category, discord.CategoryChannel):
+                self.logger.warning(f"Categoria {target_category_id} não encontrada ou não é uma categoria")
+                return
+
+            panels_sent = 0
+
+            # Processar apenas a categoria especificada
+            try:
+                # Buscar todos os canais de liderança na categoria alvo (formato: 👑│team-name-lider)
+                leader_channels = [ch for ch in target_category.text_channels if ch.name.startswith("👑│") and ch.name.endswith("-lider")]
+
+                self.logger.info(f"Encontrados {len(leader_channels)} canais de liderança na categoria {target_category.name}")
+
+                for leader_channel in leader_channels:
+                    try:
+                        # Obter a guild do canal
+                        guild = leader_channel.guild
+
+                        # Extrair nome da equipe do nome do canal
+                        # Formato: 👑│team-name-lider -> team-name
+                        channel_name_clean = leader_channel.name.replace("👑│", "").replace("-lider", "")
+                        team_name_parts = channel_name_clean.split("-")
+                        team_name = " ".join(word.capitalize() for word in team_name_parts)
+
+                        # Buscar role de líder para identificar o leader_id
+                        leader_role = discord.utils.get(guild.roles, name=f"Líder {team_name}")
+                        if not leader_role:
+                            self.logger.warning(f"Role de líder não encontrada para equipe: {team_name}")
+                            continue
+
+                        # Buscar membro com role de líder
+                        leader_members = [m for m in guild.members if leader_role in m.roles]
+                        if not leader_members:
+                            self.logger.warning(f"Nenhum membro com role de líder encontrado para equipe: {team_name}")
+                            continue
+
+                        leader = leader_members[0]
+
+                        # Buscar role da equipe para obter informações
+                        team_role = discord.utils.get(guild.roles, name=f"Equipe {team_name}")
+                        if not team_role:
+                            self.logger.warning(f"Role da equipe não encontrada: {team_name}")
+                            continue
+
+                        # Contar membros da equipe
+                        team_members_count = len([m for m in guild.members if team_role in m.roles])
+
+                        # Limpar canal (remover mensagens antigas)
+                        try:
+                            await leader_channel.purge(limit=None)
+                            self.logger.info(f"Canal {leader_channel.name} limpo")
+                        except Exception as e:
+                            self.logger.error(f"Erro ao limpar canal {leader_channel.name}: {e}")
+
+                        # Aguardar um pouco para evitar rate limits
+                        await asyncio.sleep(1)
+
+                        # Reenviar painel de liderança
+                        await self.send_leader_panel(leader_channel, team_name, leader.id, team_role.color, team_members_count)
+                        panels_sent += 1
+                        self.logger.info(f"Painel de liderança reenviado para equipe: {team_name}")
+
+                    except Exception as e:
+                        self.logger.error(f"Erro ao processar canal de liderança {leader_channel.name}: {e}")
+
+            except Exception as e:
+                self.logger.error(f"Erro ao processar categoria {target_category.name}: {e}")
+
+            self.logger.info(f"Reenvio de painéis concluído: {panels_sent} painéis reenviados na categoria {target_category.name}")
+
+        except Exception as e:
+            self.logger.error("Erro no reenvio de painéis de liderança", exc_info=e)
+
+    async def send_leader_panel(self, channel, team_name, leader_id, color, members_count):
+        """Envia painel de liderança para um canal específico"""
+        try:
+            embed = discord.Embed(
+                title=f"👑 Painel de Liderança - {team_name}",
+                description=f"""**Bem-vindo ao seu painel de liderança!**
+
+Aqui você pode gerenciar sua equipe completamente.
+
+**📋 Informações Atuais:**
+• **Nome:** {team_name}
+• **Membros:** {members_count}/6
+• **Status:** Ativa
+
+**🎮 Use os botões abaixo para:**
+• ➕ Adicionar membros (máximo 6 total)
+• ➖ Remover membros
+• ✏️ Editar informações da equipe
+• 🗑️ Deletar a equipe permanentemente
+
+**⚠️ Importante:**
+• Apenas você pode usar estes controles
+• Mudanças são aplicadas imediatamente
+• A exclusão da equipe é irreversível""",
+                color=color
+            )
+
+            embed.set_footer(text="Sistema de Equipes | Liderança | Painel Resetado")
+
+            # Importar a view aqui para evitar import circular
+            from views.team_view import TeamManagementView
+            view = TeamManagementView(team_name, leader_id)
+
+            await channel.send(embed=embed, view=view)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao enviar painel de liderança para {team_name}: {e}")
+
 # Instância do bot
 bot = MentoriaBot()
 
@@ -427,6 +665,7 @@ async def help_command(ctx):
         name="👥 Comandos para Usuários",
         value="""
         `n!ajuda` - Mostra esta mensagem de ajuda
+        `n!membros` ou `/membros` - Lista membros por roles e status
         `n!info_equipe` - Ver informações sobre uma equipe
         `n!listar_equipes` - Listar todas as equipes do servidor
         """,
@@ -454,6 +693,8 @@ async def help_command(ctx):
         `n!canais_temp` - Listar canais de voz temporários
         `n!limpar_canais` - Forçar limpeza de canais vazios
         `n!remover_canal_usuario` - Remover canais de um usuário
+        `n!reset_leader_panels` - Resetar painéis de liderança
+        `n!test_welcome` - Testar mensagem de boas-vindas
         """,
         inline=False
     )
@@ -736,6 +977,71 @@ async def limpar_canais_temp(ctx):
     except Exception as e:
         await ctx.send(f"❌ Erro ao limpar canais temporários: {str(e)}")
 
+@bot.command(name='reset_leader_panels', aliases=['reset_paineis_lider'])
+@commands.has_permissions(administrator=True)
+async def reset_leader_panels_command(ctx):
+    """Comando para reenviar painéis de liderança manualmente"""
+    try:
+        await ctx.send("🔄 **Reiniciando painéis de liderança...**")
+
+        # Executar o reset
+        await bot.resend_leader_panels()
+
+        embed = discord.Embed(
+            title="✅ Painéis de Liderança Resetados",
+            description="Todos os painéis de liderança foram reenviados com sucesso!",
+            color=discord.Color.green()
+        )
+
+        embed.add_field(
+            name="📍 Categoria Alvo",
+            value="1421848872401240127",
+            inline=True
+        )
+
+        embed.add_field(
+            name="🔄 Ação Realizada",
+            value="• Limpeza de canais\n• Reenvio de painéis\n• Reset de interações",
+            inline=False
+        )
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        bot.logger.error(f"Erro no comando de reset de painéis", exc_info=e)
+        await ctx.send(f"❌ Erro ao resetar painéis: {str(e)}")
+
+@bot.command(name='test_welcome', aliases=['testar_boas_vindas'])
+@commands.has_permissions(administrator=True)
+async def test_welcome_command(ctx, member: discord.Member = None):
+    """Comando para testar a mensagem de boas-vindas"""
+    try:
+        if not member:
+            member = ctx.author
+
+        await ctx.send(f"🧪 **Testando mensagem de boas-vindas para {member.display_name}...**")
+
+        # Enviar mensagem de boas-vindas de teste
+        await bot.send_welcome_message(member)
+
+        embed = discord.Embed(
+            title="✅ Teste de Boas-vindas Concluído",
+            description=f"Mensagem de boas-vindas enviada para {member.display_name}!",
+            color=discord.Color.green()
+        )
+
+        embed.add_field(
+            name="📍 Canal de Destino",
+            value="1402431275859579064",
+            inline=True
+        )
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        bot.logger.error(f"Erro no comando de teste de boas-vindas", exc_info=e)
+        await ctx.send(f"❌ Erro ao testar boas-vindas: {str(e)}")
+
 @bot.command(name='remover_canal_usuario', aliases=['remove_user_channels'])
 @commands.has_permissions(administrator=True)
 async def remover_canais_usuario(ctx, user: discord.Member):
@@ -787,11 +1093,11 @@ Aqui você pode solicitar ajuda de mentores experientes em diversas áreas do co
 • Você receberá ajuda personalizada!
 
 **Áreas disponíveis:**
-• Programação (Python, JavaScript, Java, C++, etc.)
-• Desenvolvimento Web e Mobile
-• Ciência de Dados e Machine Learning
-• Design e UX/UI
-• DevOps e Cloud Computing
+• Ciências Exatas: Matemática, Física, Química
+• Ciências Biológicas: Biologia, Ecologia, Genética
+• Engenharias: Mecânica, Elétrica, Química, Civil
+• Ciências da Terra: Geologia, Astronomia, Meteorologia
+• Programação e Tecnologia: Python, JavaScript, Java, C++
 • E muito mais!
 
 Clique no botão abaixo para solicitar mentoria!""",
@@ -806,7 +1112,7 @@ Clique no botão abaixo para solicitar mentoria!""",
     
     embed.add_field(
         name="⚡ Resposta rápida",
-        value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
+        value="Nossos mentores se comprometem a responder rapidamente às suas solicitações.",
         inline=False
     )
     
@@ -835,21 +1141,6 @@ async def mentoria_stats(ctx):
             )
             status_counts = status_result.fetchall()
             
-            # Por área de conhecimento
-            area_result = await session.execute(
-                select(SolicitacaoMentoria.area_conhecimento, func.count(SolicitacaoMentoria.id))
-                .group_by(SolicitacaoMentoria.area_conhecimento)
-                .order_by(func.count(SolicitacaoMentoria.id).desc())
-                .limit(5)
-            )
-            areas = area_result.fetchall()
-            
-            # Por urgência
-            urgencia_result = await session.execute(
-                select(SolicitacaoMentoria.nivel_urgencia, func.count(SolicitacaoMentoria.id))
-                .group_by(SolicitacaoMentoria.nivel_urgencia)
-            )
-            urgencias = urgencia_result.fetchall()
         
         embed = discord.Embed(
             title="📊 Estatísticas de Mentoria",
@@ -872,25 +1163,6 @@ async def mentoria_stats(ctx):
         if status_text:
             embed.add_field(name="Por Status", value=status_text, inline=True)
         
-        # Áreas mais solicitadas
-        if areas:
-            area_text = ""
-            for area, count in areas:
-                area_text += f"• {area}: {count}\n"
-            embed.add_field(name="Top 5 Áreas", value=area_text, inline=True)
-        
-        # Por urgência
-        if urgencias:
-            urgencia_text = ""
-            urgencia_emojis = {
-                'Baixa': '🟢',
-                'Média': '🟡',
-                'Alta': '🔴'
-            }
-            for urgencia, count in urgencias:
-                emoji = urgencia_emojis.get(urgencia, '⚪')
-                urgencia_text += f"{emoji} {urgencia}: {count}\n"
-            embed.add_field(name="Por Urgência", value=urgencia_text, inline=True)
         
         await ctx.send(embed=embed)
         
@@ -920,8 +1192,6 @@ async def export_solicitacoes(ctx):
         for i, s in enumerate(solicitacoes, 1):
             content += f"{i:03d}. {s.titulo}\n"
             content += f"     Solicitante: {s.discord_username}\n"
-            content += f"     Área: {s.area_conhecimento}\n"
-            content += f"     Urgência: {s.nivel_urgencia}\n"
             content += f"     Status: {s.status.value}\n"
             if s.mentor_username:
                 content += f"     Mentor: {s.mentor_username}\n"
@@ -961,11 +1231,11 @@ Aqui você pode solicitar ajuda de mentores experientes em diversas áreas do co
 • Você receberá ajuda personalizada!
 
 **Áreas disponíveis:**
-• Programação (Python, JavaScript, Java, C++, etc.)
-• Desenvolvimento Web e Mobile
-• Ciência de Dados e Machine Learning
-• Design e UX/UI
-• DevOps e Cloud Computing
+• Ciências Exatas: Matemática, Física, Química
+• Ciências Biológicas: Biologia, Ecologia, Genética
+• Engenharias: Mecânica, Elétrica, Química, Civil
+• Ciências da Terra: Geologia, Astronomia, Meteorologia
+• Programação e Tecnologia: Python, JavaScript, Java, C++
 • E muito mais!
 
 Clique no botão abaixo para solicitar mentoria!""",
@@ -980,7 +1250,7 @@ Clique no botão abaixo para solicitar mentoria!""",
     
     embed.add_field(
         name="⚡ Resposta rápida",
-        value="Nossos mentores se comprometem a responder rapidamente baseado na urgência da sua solicitação.",
+        value="Nossos mentores se comprometem a responder rapidamente às suas solicitações.",
         inline=False
     )
     
@@ -1009,14 +1279,6 @@ async def mentoria_stats_slash(interaction: discord.Interaction):
             )
             status_counts = status_result.fetchall()
             
-            # Por área de conhecimento
-            area_result = await session.execute(
-                select(SolicitacaoMentoria.area_conhecimento, func.count(SolicitacaoMentoria.id))
-                .group_by(SolicitacaoMentoria.area_conhecimento)
-                .order_by(func.count(SolicitacaoMentoria.id).desc())
-                .limit(5)
-            )
-            areas = area_result.fetchall()
         
         embed = discord.Embed(
             title="📊 Estatísticas de Mentoria",
@@ -1039,12 +1301,6 @@ async def mentoria_stats_slash(interaction: discord.Interaction):
         if status_text:
             embed.add_field(name="Por Status", value=status_text, inline=True)
         
-        # Áreas mais solicitadas
-        if areas:
-            area_text = ""
-            for area, count in areas:
-                area_text += f"• {area}: {count}\n"
-            embed.add_field(name="Top 5 Áreas", value=area_text, inline=True)
         
         await interaction.response.send_message(embed=embed)
         
@@ -1074,8 +1330,6 @@ async def export_solicitacoes_slash(interaction: discord.Interaction):
         for i, s in enumerate(solicitacoes, 1):
             content += f"{i:03d}. {s.titulo}\n"
             content += f"     Solicitante: {s.discord_username}\n"
-            content += f"     Área: {s.area_conhecimento}\n"
-            content += f"     Urgência: {s.nivel_urgencia}\n"
             content += f"     Status: {s.status.value}\n"
             if s.mentor_username:
                 content += f"     Mentor: {s.mentor_username}\n"
@@ -1205,18 +1459,8 @@ async def list_solicitacoes(interaction: discord.Interaction):
             color=discord.Color.blue()
         )
         
-        urgencia_emojis = {
-            'Baixa': '🟢',
-            'Média': '🟡',
-            'Alta': '🔴'
-        }
-        
         for s in solicitacoes[:5]:
-            urgencia_emoji = urgencia_emojis.get(s.nivel_urgencia, '⚪')
-            
             field_value = f"**Solicitante:** {s.discord_username}\n"
-            field_value += f"**Área:** {s.area_conhecimento}\n"
-            field_value += f"**Urgência:** {urgencia_emoji} {s.nivel_urgencia}\n"
             field_value += f"**Data:** {s.data_solicitacao.strftime('%d/%m %H:%M')}\n"
             field_value += f"**Descrição:** {s.descricao[:100]}{'...' if len(s.descricao) > 100 else ''}"
             
@@ -1250,6 +1494,7 @@ async def help_command_slash(interaction: discord.Interaction):
         name="👥 Comandos para Usuários",
         value="""
         `n!ajuda` ou `/ajuda` - Mostra esta mensagem de ajuda
+        `n!membros` ou `/membros` - Lista membros por roles e status
         """,
         inline=False
     )
@@ -1300,8 +1545,131 @@ async def help_command_slash(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+# Comando para mostrar membros por roles
+@bot.command(name='membros', aliases=['members', 'lista_membros'])
+async def list_members_by_role(ctx):
+    """Lista membros do servidor organizados por roles"""
+    try:
+        guild = ctx.guild
+        if not guild:
+            await ctx.send("❌ Este comando só pode ser usado em um servidor.")
+            return
 
+        embed = discord.Embed(
+            title=f"👥 Membros do Servidor - {guild.name}",
+            color=discord.Color.blue()
+        )
 
+        # Membros conectados (online/idle/dnd)
+        online_members = []
+        for member in guild.members:
+            if member.status in [discord.Status.online, discord.Status.idle, discord.Status.dnd]:
+                online_members.append(member)
+
+        if online_members:
+            online_list = "\n".join([f"🟢 {member.display_name}" for member in online_members[:20]])
+            if len(online_members) > 20:
+                online_list += f"\n... e mais {len(online_members) - 20} membros"
+            embed.add_field(
+                name=f"🌐 Membros Conectados ({len(online_members)})",
+                value=online_list,
+                inline=False
+            )
+
+        # Membros com role "Participante"
+        participante_role = discord.utils.get(guild.roles, name="Participante")
+        if participante_role and participante_role.members:
+            participante_list = "\n".join([f"🔵 {member.display_name}" for member in participante_role.members[:20]])
+            if len(participante_role.members) > 20:
+                participante_list += f"\n... e mais {len(participante_role.members) - 20} membros"
+            embed.add_field(
+                name=f"🔵 Participantes ({len(participante_role.members)})",
+                value=participante_list,
+                inline=False
+            )
+
+        # Membros de equipes
+        team_roles = [role for role in guild.roles if role.name.startswith("Equipe ")]
+        for team_role in sorted(team_roles, key=lambda r: r.name)[:10]:  # Mostrar até 10 equipes
+            if team_role.members:
+                team_list = "\n".join([f"🏆 {member.display_name}" for member in team_role.members[:15]])
+                if len(team_role.members) > 15:
+                    team_list += f"\n... e mais {len(team_role.members) - 15} membros"
+                embed.add_field(
+                    name=f"🏆 {team_role.name} ({len(team_role.members)})",
+                    value=team_list,
+                    inline=True
+                )
+
+        embed.set_footer(text=f"Total de membros: {guild.member_count}")
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        bot.logger.error(f"Erro no comando membros", exc_info=e)
+        await ctx.send("❌ Erro ao buscar informações dos membros.")
+
+# Comando slash para mostrar membros por roles
+@bot.tree.command(name='membros', description='Lista membros do servidor organizados por roles')
+async def list_members_by_role_slash(interaction: discord.Interaction):
+    """Lista membros do servidor organizados por roles"""
+    try:
+        guild = interaction.guild
+        if not guild:
+            await interaction.response.send_message("❌ Este comando só pode ser usado em um servidor.", ephemeral=True)
+            return
+
+        embed = discord.Embed(
+            title=f"👥 Membros do Servidor - {guild.name}",
+            color=discord.Color.blue()
+        )
+
+        # Membros conectados (online/idle/dnd)
+        online_members = []
+        for member in guild.members:
+            if member.status in [discord.Status.online, discord.Status.idle, discord.Status.dnd]:
+                online_members.append(member)
+
+        if online_members:
+            online_list = "\n".join([f"🟢 {member.display_name}" for member in online_members[:20]])
+            if len(online_members) > 20:
+                online_list += f"\n... e mais {len(online_members) - 20} membros"
+            embed.add_field(
+                name=f"🌐 Membros Conectados ({len(online_members)})",
+                value=online_list,
+                inline=False
+            )
+
+        # Membros com role "Participante"
+        participante_role = discord.utils.get(guild.roles, name="Participante")
+        if participante_role and participante_role.members:
+            participante_list = "\n".join([f"🔵 {member.display_name}" for member in participante_role.members[:20]])
+            if len(participante_role.members) > 20:
+                participante_list += f"\n... e mais {len(participante_role.members) - 20} membros"
+            embed.add_field(
+                name=f"🔵 Participantes ({len(participante_role.members)})",
+                value=participante_list,
+                inline=False
+            )
+
+        # Membros de equipes
+        team_roles = [role for role in guild.roles if role.name.startswith("Equipe ")]
+        for team_role in sorted(team_roles, key=lambda r: r.name)[:10]:  # Mostrar até 10 equipes
+            if team_role.members:
+                team_list = "\n".join([f"🏆 {member.display_name}" for member in team_role.members[:15]])
+                if len(team_role.members) > 15:
+                    team_list += f"\n... e mais {len(team_role.members) - 15} membros"
+                embed.add_field(
+                    name=f"🏆 {team_role.name} ({len(team_role.members)})",
+                    value=team_list,
+                    inline=True
+                )
+
+        embed.set_footer(text=f"Total de membros: {guild.member_count}")
+        await interaction.response.send_message(embed=embed)
+
+    except Exception as e:
+        bot.logger.error(f"Erro no comando membros slash", exc_info=e)
+        await interaction.response.send_message("❌ Erro ao buscar informações dos membros.", ephemeral=True)
 
 # Error handlers para comandos de prefixo
 @help_command.error
@@ -1314,6 +1682,7 @@ async def help_command_slash(interaction: discord.Interaction):
 @mentoria_stats.error
 @export_solicitacoes.error
 @clear_messages.error
+@list_members_by_role.error
 async def command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("Você não tem permissão para usar este comando.")
@@ -1325,6 +1694,7 @@ async def command_error(ctx, error):
 @export_solicitacoes_slash.error
 @list_solicitacoes.error
 @clear_messages_slash.error
+@list_members_by_role_slash.error
 async def slash_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     if isinstance(error, discord.app_commands.MissingPermissions):
         if not interaction.response.is_done():

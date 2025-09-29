@@ -179,3 +179,456 @@ discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
 2025-09-28 10:35:59,525 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
 2025-09-28 10:36:00,020 - nasa_spaceapps_bot - INFO - info:195 - Anúncio de atualizações enviado para o canal 1421850940767473715
 2025-09-28 10:37:45,112 - nasa_spaceapps_bot - INFO - info:195 - Desconectando bot...
+2025-09-28 13:47:09,886 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-28 13:47:09,913 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-28 13:47:09,914 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-28 13:47:09,914 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-09-28 13:47:09,914 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-09-28 13:47:12,311 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-28 13:47:12,614 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-09-28 13:47:13,087 - nasa_spaceapps_bot - INFO - info:195 - Canal de equipes limpo: 1 mensagens removidas
+2025-09-28 13:47:13,656 - nasa_spaceapps_bot - INFO - info:195 - Canal de mentoria limpo: 1 mensagens removidas
+2025-09-28 13:47:15,875 - nasa_spaceapps_bot - INFO - info:195 - Painel de mentoria enviado para o canal 1404479492814016703
+2025-09-28 13:47:16,097 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
+2025-09-28 13:47:16,440 - nasa_spaceapps_bot - INFO - info:195 - Anúncio de atualizações enviado para o canal 1421850940767473715
+2025-09-28 14:03:49,493 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-28 14:03:49,518 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-28 14:03:49,518 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-28 14:03:49,518 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-09-28 14:03:49,518 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-09-28 14:03:51,930 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-28 14:03:52,582 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 6 comando(s) slash
+2025-09-28 14:03:52,986 - nasa_spaceapps_bot - INFO - info:195 - Canal de equipes limpo: 1 mensagens removidas
+2025-09-28 14:03:53,473 - nasa_spaceapps_bot - INFO - info:195 - Canal de mentoria limpo: 1 mensagens removidas
+2025-09-28 14:03:55,704 - nasa_spaceapps_bot - INFO - info:195 - Painel de mentoria enviado para o canal 1404479492814016703
+2025-09-28 14:03:56,067 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
+2025-09-28 14:03:56,362 - nasa_spaceapps_bot - INFO - info:195 - Anúncio de atualizações enviado para o canal 1421850940767473715
+2025-09-28 14:04:08,451 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário '🔊 Ghabryel' criado para 852694904680480818 (Ghabryel)
+2025-09-28 14:04:24,446 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário 🔊 Ghabryel (ID: 1421860029728034817) deletado - criado por Ghabryel
+2025-09-28 14:14:25,167 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Teste' criada por 852694904680480818 (_ghabryel)
+2025-09-28 14:14:38,637 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao deletar equipe Teste
+Traceback (most recent call last):
+  File "/app/handlers/team_handler.py", line 745, in delete_team
+    await interaction.response.edit_message(embed=embed, view=None)
+  File "/usr/local/lib/python3.11/site-packages/discord/interactions.py", line 1154, in edit_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/discord/webhook/async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10008): Unknown Message
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/handlers/team_handler.py", line 748, in delete_team
+    await interaction.followup.send(embed=embed, ephemeral=True)
+  File "/usr/local/lib/python3.11/site-packages/discord/webhook/async_.py", line 1857, in send
+    data = await adapter.execute_webhook(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/discord/webhook/async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10015): Unknown Webhook
+2025-09-28 14:16:44,553 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 6 mensagens no canal comandos
+2025-09-28 14:20:31,833 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário '🔊 Ghabryel' criado para 852694904680480818 (Ghabryel)
+2025-09-28 14:20:42,870 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário 🔊 Ghabryel (ID: 1421864154448531498) deletado - criado por Ghabryel
+2025-09-28 14:33:07,212 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Oumuamua' criada por 962038695429558322 (4rsn)
+2025-09-28 14:53:09,778 - nasa_spaceapps_bot - INFO - info:195 - Usuário 852694904680480818 (_ghabryel) limpou 6 mensagens no canal 💬┃general
+2025-09-28 16:07:10,398 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Kultive' criada por 689608766974722144 (joseneto9748)
+2025-09-28 17:35:39,579 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Titan' criada por 596103326794383383 (camilobarreto)
+2025-09-28 18:35:52,300 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário '🔊 Gaby Kirmayr' criado para 1289781091506454530 (Gaby Kirmayr)
+2025-09-28 18:35:57,822 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário 🔊 Gaby Kirmayr (ID: 1421928413228433534) deletado - criado por Gaby Kirmayr
+2025-09-28 18:53:18,216 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'DataRoots' criada por 565155298579578890 (eduardoalves9149)
+2025-09-28 21:00:44,386 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'Equipa Reality' criada por 1421906459205046322 (mmawelele)
+2025-09-29 00:15:31,755 - nasa_spaceapps_bot - INFO - info:195 - Equipe 'MindOrbit' criada por 852694904680480818 (_ghabryel)
+2025-09-29 00:52:40,898 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário '🔊 Ronald Hiedley' criado para 890292259868794953 (Ronald Hiedley)
+2025-09-29 00:52:43,467 - nasa_spaceapps_bot - INFO - info:195 - Canal temporário 🔊 Ronald Hiedley (ID: 1422023240502743190) deletado - criado por Ronald Hiedley
+2025-09-29 11:26:11,642 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao salvar solicitação de mentoria para usuário 852694904680480818
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 521, in _prepare_and_execute
+    prepared_stmt, attributes = await adapt_connection._prepare(
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 768, in _prepare
+    prepared_stmt = await self._connection.prepare(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 635, in prepare
+    return await self._prepare(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 653, in _prepare
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.UndefinedColumnError: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/handlers/mentoria_handler.py", line 116, in _process_urgencia
+    await db_session.commit()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 1014, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1413, in execute
+    return meth(
+           ^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1635, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1840, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1980, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2349, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+[SQL: INSERT INTO solicitacoes_mentoria (discord_user_id, discord_username, team_name, titulo, descricao, area_conhecimento, nivel_urgencia, status, mentor_discord_id, mentor_username, data_solicitacao, data_assumida, data_conclusao) VALUES ($1::BIGINT, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::VARCHAR, $8::statussolicitacaoenum, $9::BIGINT, $10::VARCHAR, $11::TIMESTAMP WITHOUT TIME ZONE, $12::TIMESTAMP WITHOUT TIME ZONE, $13::TIMESTAMP WITHOUT TIME ZONE) RETURNING solicitacoes_mentoria.id]
+[parameters: (852694904680480818, 'Ghabryel', 'MindOrbit', 'Preciso de ajuda com calculos de fisica', 'Preciso de ajuda com calculos de fisica, para calcular a distancia entre planetas basiado na distancia do Sol', 'Fisica', 'Média', 'Pendente', None, None, datetime.datetime(2025, 9, 29, 11, 26, 11, 618168), None, None)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-29 11:26:14,144 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao salvar solicitação de mentoria para usuário 852694904680480818
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 521, in _prepare_and_execute
+    prepared_stmt, attributes = await adapt_connection._prepare(
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 768, in _prepare
+    prepared_stmt = await self._connection.prepare(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 635, in prepare
+    return await self._prepare(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 653, in _prepare
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.UndefinedColumnError: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/handlers/mentoria_handler.py", line 116, in _process_urgencia
+    await db_session.commit()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 1014, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1413, in execute
+    return meth(
+           ^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1635, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1840, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1980, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2349, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+[SQL: INSERT INTO solicitacoes_mentoria (discord_user_id, discord_username, team_name, titulo, descricao, area_conhecimento, nivel_urgencia, status, mentor_discord_id, mentor_username, data_solicitacao, data_assumida, data_conclusao) VALUES ($1::BIGINT, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::VARCHAR, $8::statussolicitacaoenum, $9::BIGINT, $10::VARCHAR, $11::TIMESTAMP WITHOUT TIME ZONE, $12::TIMESTAMP WITHOUT TIME ZONE, $13::TIMESTAMP WITHOUT TIME ZONE) RETURNING solicitacoes_mentoria.id]
+[parameters: (852694904680480818, 'Ghabryel', 'MindOrbit', 'Preciso de ajuda com calculos de fisica', 'Preciso de ajuda com calculos de fisica, para calcular a distancia entre planetas basiado na distancia do Sol', 'Fisica', 'Alta', 'Pendente', None, None, datetime.datetime(2025, 9, 29, 11, 26, 14, 143205), None, None)]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-29 12:23:43,112 - nasa_spaceapps_bot - INFO - info:195 - Iniciando configuração do bot...
+2025-09-29 12:23:43,136 - nasa_spaceapps_bot - INFO - info:195 - Tabelas do banco de dados verificadas/criadas
+2025-09-29 12:23:43,136 - nasa_spaceapps_bot - INFO - info:195 - Handlers inicializados
+2025-09-29 12:23:43,137 - nasa_spaceapps_bot - INFO - info:195 - Views persistentes adicionadas
+2025-09-29 12:23:43,137 - nasa_spaceapps_bot - INFO - info:195 - Bot configurado e pronto!
+2025-09-29 12:23:45,567 - nasa_spaceapps_bot - INFO - info:195 - Bot conectado como NASA Space Apps Uberlândia (ID: 1402383692462166137)
+2025-09-29 12:23:45,828 - nasa_spaceapps_bot - INFO - info:195 - Sincronizados 7 comando(s) slash
+2025-09-29 12:23:46,305 - nasa_spaceapps_bot - INFO - info:195 - Canal de equipes limpo: 1 mensagens removidas
+2025-09-29 12:23:46,834 - nasa_spaceapps_bot - INFO - info:195 - Canal de mentoria limpo: 1 mensagens removidas
+2025-09-29 12:23:49,130 - nasa_spaceapps_bot - INFO - info:195 - Painel de mentoria enviado para o canal 1404479492814016703
+2025-09-29 12:23:49,727 - nasa_spaceapps_bot - INFO - info:195 - Painel de equipes enviado para o canal 1421842573760135268
+2025-09-29 12:23:50,004 - nasa_spaceapps_bot - INFO - info:195 - Anúncio de atualizações enviado para o canal 1421850940767473715
+2025-09-29 12:23:50,004 - nasa_spaceapps_bot - INFO - info:195 - Iniciando reenvio de painéis de liderança...
+2025-09-29 12:23:50,004 - nasa_spaceapps_bot - INFO - info:195 - Encontrados 6 canais de liderança na categoria 👑 LIDERANÇA
+2025-09-29 12:23:50,526 - nasa_spaceapps_bot - INFO - info:195 - Canal 👑│oumuamua-lider limpo
+2025-09-29 12:23:51,742 - nasa_spaceapps_bot - INFO - info:195 - Painel de liderança reenviado para equipe: Oumuamua
+2025-09-29 12:23:52,326 - nasa_spaceapps_bot - INFO - info:195 - Canal 👑│kultive-lider limpo
+2025-09-29 12:23:53,625 - nasa_spaceapps_bot - INFO - info:195 - Painel de liderança reenviado para equipe: Kultive
+2025-09-29 12:23:54,177 - nasa_spaceapps_bot - INFO - info:195 - Canal 👑│titan-lider limpo
+2025-09-29 12:23:55,414 - nasa_spaceapps_bot - INFO - info:195 - Painel de liderança reenviado para equipe: Titan
+2025-09-29 12:23:55,414 - nasa_spaceapps_bot - WARNING - warning:199 - Role de líder não encontrada para equipe: Dataroots
+2025-09-29 12:23:55,415 - nasa_spaceapps_bot - WARNING - warning:199 - Role de líder não encontrada para equipe: Equipareality
+2025-09-29 12:23:55,415 - nasa_spaceapps_bot - WARNING - warning:199 - Role de líder não encontrada para equipe: Mindorbit
+2025-09-29 12:23:55,415 - nasa_spaceapps_bot - INFO - info:195 - Reenvio de painéis concluído: 3 painéis reenviados na categoria 👑 LIDERANÇA
+2025-09-29 12:26:07,342 - nasa_spaceapps_bot - ERROR - error:203 - Erro ao salvar solicitação de mentoria para usuário 852694904680480818
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 521, in _prepare_and_execute
+    prepared_stmt, attributes = await adapt_connection._prepare(
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 768, in _prepare
+    prepared_stmt = await self._connection.prepare(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 635, in prepare
+    return await self._prepare(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 653, in _prepare
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.UndefinedColumnError: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/handlers/mentoria_handler.py", line 93, in _process_finalizacao
+    await db_session.commit()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 1014, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1413, in execute
+    return meth(
+           ^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1635, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1840, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1980, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2349, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1961, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 944, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 580, in execute
+    self._adapt_connection.await_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 558, in _prepare_and_execute
+    self._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 508, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 792, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column "team_name" of relation "solicitacoes_mentoria" does not exist
+[SQL: INSERT INTO solicitacoes_mentoria (discord_user_id, discord_username, team_name, titulo, descricao, status, mentor_discord_id, mentor_username, data_solicitacao, data_assumida, data_conclusao) VALUES ($1::BIGINT, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::statussolicitacaoenum, $7::BIGINT, $8::VARCHAR, $9::TIMESTAMP WITHOUT TIME ZONE, $10::TIMESTAMP WITHOUT TIME ZONE, $11::TIMESTAMP WITHOUT TIME ZONE) RETURNING solicitacoes_mentoria.id]
+[parameters: (852694904680480818, 'Ghabryel', 'MindOrbit', 'Preciso de ajuda com calculos de fisica', 'Preciso de ajuda com calculos de fisica', 'Pendente', None, None, datetime.datetime(2025, 9, 29, 12, 26, 7, 340276), None, None)]
+(Background on this error at: https://sqlalche.me/e/20/f405)

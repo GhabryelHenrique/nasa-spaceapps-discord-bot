@@ -6,8 +6,8 @@ services:
     container_name: nasa_bot_postgres
     environment:
       POSTGRES_DB: nasa_spaceapps_bot
-      POSTGRES_USER: nasa_user
-      POSTGRES_PASSWORD: nasa_password_123
+      POSTGRES_USER: nasa_bot_user
+      POSTGRES_PASSWORD: senha123
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
